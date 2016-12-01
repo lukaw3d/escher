@@ -25,7 +25,7 @@
  * draw.callback_manager.run('update_node', draw, update_selection)
  * draw.callback_manager.run('create_text_label', draw, enter_selection)
  * draw.callback_manager.run('update_text_label', draw, update_selection)
- *
+ * draw.callback_manager.run('update_knockout_mark', draw, update_selection);
  */
 
 var utils = require('./utils')
@@ -51,7 +51,8 @@ Draw.prototype = {
   create_reaction_label: create_reaction_label,
   update_reaction_label: update_reaction_label,
   create_segment: create_segment,
-  update_segment: update_segment
+  update_segment: update_segment,
+  update_knockout_mark: update_knockout_mark
 }
 module.exports = Draw
 
@@ -156,6 +157,26 @@ function create_reaction_label (enter_selection, tool) {
   this.callback_manager.run('create_reaction_label', this, enter_selection)
 
   return group
+}
+
+function update_knockout_mark(update_selection) {
+
+    var g = update_selection.append('g')
+            .attr('class', 'ko-mark')
+            .attr('id', function(d) { return 'ko' + d.node_id; });
+
+    g.append('text')
+        .attr('transform', function(d) {
+            return 'translate(' + d.x + ',' + d.y + ')';
+        })
+        .append('tspan')
+        .text('X')
+        .style('fill', 'red')
+        .style('font-size', '75px')
+        .attr('dx', -25)
+        .attr('dy', 30);
+
+    this.callback_manager.run('update_knockout_mark', this, update_selection);
 }
 
 /**
