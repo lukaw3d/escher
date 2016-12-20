@@ -34,8 +34,10 @@ Behavior.prototype = {
   toggle_text_label_edit: toggle_text_label_edit,
   toggle_selectable_drag: toggle_selectable_drag,
   toggle_label_drag: toggle_label_drag,
+  toggle_label_mousedown: toggle_label_mousedown,
   toggle_label_mouseover: toggle_label_mouseover,
   toggle_bezier_drag: toggle_bezier_drag,
+  toggle_reaction_hover: toggle_reaction_hover,
   // util
   turn_off_drag: turn_off_drag,
   // get drag behaviors
@@ -71,6 +73,9 @@ function init (map, undo_stack) {
   this.label_mousedown = null
   this.label_mouseover = null
   this.label_mouseout = null
+  this.reaction_mousedown = null
+  this.reaction_mouseover = null
+  this.reaction_mouseout = null
   this.bezier_drag = this.empty_behavior
   this.bezier_mouseover = null
   this.bezier_mouseout = null
@@ -88,6 +93,42 @@ function turn_everything_on () {
   this.toggle_selectable_drag(true)
   this.toggle_label_drag(true)
   this.toggle_label_mouseover(true)
+  this.toggle_label_mousedown(true)
+  this.toggle_reaction_hover(true)
+}
+
+function toggle_reaction_hover(on_off) {
+    /** Listen for mouse events on reactions.
+
+     */
+
+    if (on_off) {
+        var no_data_size = this.map.settings.get_option('reaction_no_data_size');
+        var scale = this.map.scale;
+
+        this.reaction_mouseover = function(d) {
+            var reaction_size = no_data_size;
+
+            if (d.data !== null) {
+                reaction_size = scale.reaction_size(d.data);
+            }
+
+            d3.select(this).selectAll('.segment').transition().style('stroke-width', reaction_size * 2.1).duration(100);
+        };
+
+        this.reaction_mouseout = function(d) {
+            var reaction_size = no_data_size;
+
+            if (d.data !== null) {
+                reaction_size = scale.reaction_size(d.data);
+            }
+
+            d3.select(this).selectAll('.segment').transition().style('stroke-width', reaction_size).duration(100);
+        };
+    } else {
+        this.reaction_mouseout = null;
+        this.reaction_mouseover = null;
+    }
 }
 
 /**
@@ -98,6 +139,8 @@ function turn_everything_off () {
   this.toggle_selectable_drag(false)
   this.toggle_label_drag(false)
   this.toggle_label_mouseover(false)
+  this.toggle_label_mousedown(false)
+  this.toggle_reaction_hover(false)
 }
 
 /**
