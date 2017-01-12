@@ -41,8 +41,10 @@ Builder.prototype = {
   _reaction_check_add_abs: _reaction_check_add_abs,
   set_knockout_reactions: set_knockout_reactions,
   set_reaction_data: set_reaction_data,
+  set_reaction_fva_data: set_reaction_fva_data,
   set_metabolite_data: set_metabolite_data,
   set_gene_data: set_gene_data,
+  set_knockout_reactions: set_knockout_reactions,
   _update_data: _update_data,
   _toggle_direction_buttons: _toggle_direction_buttons,
   _set_up_menu: _set_up_menu,
@@ -112,10 +114,12 @@ function init (map_data, model_data, embedded_css, selection, options) {
     hide_secondary_metabolites: false,
     show_gene_reaction_rules: false,
     hide_all_labels: false,
+    enable_fva_opacity: true,
     canvas_size_and_loc: null,
     // applied data
     // reaction
     reaction_data: null,
+    reaction_fva_data: null,
     reaction_styles: ['color', 'size', 'text'],
     reaction_compare_style: 'log2_fold',
     reaction_scale: [ { type: 'min', color: '#c8c8c8', size: 12 },
@@ -576,6 +580,14 @@ function set_reaction_data (data) {
   } else {
     this.map.set_status('')
   }
+}
+
+function set_reaction_fva_data(data) {
+    if (this.options.enable_fva_opacity) {
+        this.options.reaction_fva_data = data;
+        this.map.update_these_reactions_opacity(data);
+        this.map.set_status('');
+    }
 }
 
 function set_knockout_reactions(data) {
