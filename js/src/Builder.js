@@ -42,6 +42,7 @@ Builder.prototype = {
   set_knockout_reactions: set_knockout_reactions,
   knockout_reaction: knockout_reaction,
   undo_knockout_reaction: undo_knockout_reaction,
+  draw_knockout_reactions: draw_knockout_reactions,
   set_reaction_data: set_reaction_data,
   set_reaction_fva_data: set_reaction_fva_data,
   set_metabolite_data: set_metabolite_data,
@@ -610,6 +611,11 @@ function knockout_reaction(data){
 
 function undo_knockout_reaction(data){
     this.options.reaction_knockout.remove(data);
+    this.map.clear_these_knockouts(this.options.reaction_knockout);
+    this.map.set_status('');
+}
+
+function draw_knockout_reactions(){
     this.map.clear_these_knockouts(this.options.reaction_knockout);
     this.map.set_status('');
 }
