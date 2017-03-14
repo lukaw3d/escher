@@ -40,11 +40,12 @@ Builder.prototype = {
   text_mode: text_mode,
   _reaction_check_add_abs: _reaction_check_add_abs,
   set_knockout_reactions: set_knockout_reactions,
+  knockout_reaction: knockout_reaction,
+  undo_knockout_reaction: undo_knockout_reaction,
   set_reaction_data: set_reaction_data,
   set_reaction_fva_data: set_reaction_fva_data,
   set_metabolite_data: set_metabolite_data,
   set_gene_data: set_gene_data,
-  set_knockout_reactions: set_knockout_reactions,
   _update_data: _update_data,
   _toggle_direction_buttons: _toggle_direction_buttons,
   _set_up_menu: _set_up_menu,
@@ -599,6 +600,18 @@ function set_knockout_reactions(data) {
 
     this.options.reaction_knockout = data;
     this.map.set_status('')
+}
+
+function knockout_reaction(data){
+    this.options.reaction_knockout.push(data);
+    this.map.draw_these_knockouts(this.options.reaction_knockout);
+    this.map.set_status('');
+}
+
+function undo_knockout_reaction(data){
+    this.options.reaction_knockout.remove(data);
+    this.map.clear_these_knockouts(this.options.reaction_knockout);
+    this.map.set_status('');
 }
 
 /**
