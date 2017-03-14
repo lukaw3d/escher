@@ -616,7 +616,7 @@ function undo_knockout_reaction(data){
 }
 
 function draw_knockout_reactions(){
-    this.map.clear_these_knockouts(this.options.reaction_knockout);
+    this.map.draw_these_knockouts(this.options.reaction_knockout);
     this.map.set_status('');
 }
 
