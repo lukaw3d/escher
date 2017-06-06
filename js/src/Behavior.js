@@ -34,7 +34,6 @@ Behavior.prototype = {
   toggle_text_label_edit: toggle_text_label_edit,
   toggle_selectable_drag: toggle_selectable_drag,
   toggle_label_drag: toggle_label_drag,
-  toggle_label_mousedown: toggle_label_mousedown,
   toggle_label_mouseover: toggle_label_mouseover,
   toggle_bezier_drag: toggle_bezier_drag,
   toggle_reaction_hover: toggle_reaction_hover,
@@ -93,7 +92,6 @@ function turn_everything_on () {
   this.toggle_selectable_drag(true)
   this.toggle_label_drag(true)
   this.toggle_label_mouseover(true)
-  this.toggle_label_mousedown(true)
   this.toggle_reaction_hover(true)
 }
 
@@ -139,7 +137,6 @@ function turn_everything_off () {
   this.toggle_selectable_drag(false)
   this.toggle_label_drag(false)
   this.toggle_label_mouseover(false)
-  this.toggle_label_mousedown(false)
   this.toggle_reaction_hover(false)
 }
 

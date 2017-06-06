@@ -495,7 +495,6 @@ function _set_mode (mode) {
   this.map.behavior.toggle_selectable_click(mode == 'build' || mode == 'brush')
   this.map.behavior.toggle_label_drag(mode == 'brush')
   this.map.behavior.toggle_label_mouseover(true)
-  this.map.behavior.toggle_label_mousedown(mode=='brush')
   this.map.behavior.toggle_text_label_edit(mode == 'text')
   this.map.behavior.toggle_bezier_drag(mode == 'brush')
   this.map.behavior.toggle_reaction_hover(mode=='zoom' || mode=='view')
