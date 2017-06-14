@@ -592,11 +592,8 @@ function set_reaction_fva_data(data) {
 }
 
 function set_knockout_reactions(data) {
-    if (data.length > this.options.reaction_knockout.length) {
-        this.map.draw_these_knockouts(_.difference(data, this.options.reaction_knockout));
-    } else {
-        this.map.clear_these_knockouts(_.difference(this.options.reaction_knockout, data));
-    }
+    this.map.clear_these_knockouts(this.options.reaction_knockout);
+    this.map.draw_these_knockouts(data);
 
     this.options.reaction_knockout = data;
     this.map.set_status('')
