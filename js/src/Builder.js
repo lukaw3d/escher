@@ -1342,54 +1342,54 @@ function _get_keys (map, zoom_container, search_bar, settings_bar, enable_editin
       target: zoom_container,
       fn: zoom_container.zoom_in,
     },
-    zoom_in: {
-      key: '=',
-      target: zoom_container,
-      fn: zoom_container.zoom_in,
-      ignore_with_input: true,
-    },
+    // zoom_in: {
+    //   key: '=',
+    //   target: zoom_container,
+    //   fn: zoom_container.zoom_in,
+    //   ignore_with_input: true,
+    // },
     zoom_out_ctrl: {
       key: 'ctrl+-',
       target: zoom_container,
       fn: zoom_container.zoom_out,
     },
-    zoom_out: {
-      key: '-',
-      target: zoom_container,
-      fn: zoom_container.zoom_out,
-      ignore_with_input: true,
-    },
+    // zoom_out: {
+    //   key: '-',
+    //   target: zoom_container,
+    //   fn: zoom_container.zoom_out,
+    //   ignore_with_input: true,
+    // },
     extent_nodes_ctrl: {
       key: 'ctrl+0',
       target: map,
       fn: map.zoom_extent_nodes,
     },
-    extent_nodes: {
-      key: '0',
-      target: map,
-      fn: map.zoom_extent_nodes,
-      ignore_with_input: true,
-    },
+    // extent_nodes: {
+    //   key: '0',
+    //   target: map,
+    //   fn: map.zoom_extent_nodes,
+    //   ignore_with_input: true,
+    // },
     extent_canvas_ctrl: {
       key: 'ctrl+1',
       target: map,
       fn: map.zoom_extent_canvas,
     },
-    extent_canvas: {
-      key: '1',
-      target: map,
-      fn: map.zoom_extent_canvas,
-      ignore_with_input: true,
-    },
+    // extent_canvas: {
+    //   key: '1',
+    //   target: map,
+    //   fn: map.zoom_extent_canvas,
+    //   ignore_with_input: true,
+    // },
     search_ctrl: {
       key: 'ctrl+f',
       fn: search_bar.toggle.bind(search_bar, true),
     },
-    search: {
-      key: 'f',
-      fn: search_bar.toggle.bind(search_bar, true),
-      ignore_with_input: true,
-    },
+    // search: {
+    //   key: 'f',
+    //   fn: search_bar.toggle.bind(search_bar, true),
+    //   ignore_with_input: true,
+    // },
     view_mode: {
       target: this,
       fn: this.view_mode,
@@ -1400,12 +1400,12 @@ function _get_keys (map, zoom_container, search_bar, settings_bar, enable_editin
       target: settings_bar,
       fn: settings_bar.toggle,
     },
-    show_settings: {
-      key: ',',
-      target: settings_bar,
-      fn: settings_bar.toggle,
-      ignore_with_input: true,
-    },
+    // show_settings: {
+    //   key: ',',
+    //   target: settings_bar,
+    //   fn: settings_bar.toggle,
+    //   ignore_with_input: true,
+    // },
   }
   if (full_screen_button) {
     utils.extend(keys, {
@@ -1414,48 +1414,48 @@ function _get_keys (map, zoom_container, search_bar, settings_bar, enable_editin
         target: map,
         fn: map.full_screen,
       },
-      full_screen: {
-        key: '2',
-        target: map,
-        fn: map.full_screen,
-        ignore_with_input: true,
-      },
+      // full_screen: {
+      //   key: '2',
+      //   target: map,
+      //   fn: map.full_screen,
+      //   ignore_with_input: true,
+      // },
     })
   }
   if (enable_editing) {
     utils.extend(keys, {
       build_mode: {
-        key: 'n',
+        key: 'ctrl+n',
         target: this,
         fn: this.build_mode,
         ignore_with_input: true,
       },
-      zoom_mode: {
-        key: 'z',
-        target: this,
-        fn: this.zoom_mode,
-        ignore_with_input: true,
-      },
+      // zoom_mode: {
+      //   key: 'z',
+      //   target: this,
+      //   fn: this.zoom_mode,
+      //   ignore_with_input: true,
+      // },
       brush_mode: {
-        key: 'v',
+        key: 'ctrl+v',
         target: this,
         fn: this.brush_mode,
         ignore_with_input: true,
       },
       rotate_mode: {
-        key: 'r',
+        key: 'ctrl+r',
         target: this,
         fn: this.rotate_mode,
         ignore_with_input: true,
       },
       text_mode: {
-        key: 't',
+        key: 'ctrl+t',
         target: this,
         fn: this.text_mode,
         ignore_with_input: true,
       },
       toggle_beziers: {
-        key: 'b',
+        key: 'ctrl+b',
         target: map,
         fn: map.toggle_beziers,
         ignore_with_input: true,
@@ -1466,50 +1466,50 @@ function _get_keys (map, zoom_container, search_bar, settings_bar, enable_editin
         fn: map.delete_selected,
         ignore_with_input: true,
       },
-      delete: {
-        key: 'backspace',
-        target: map,
-        fn: map.delete_selected,
-        ignore_with_input: true,
-      },
-      delete_del: {
-        key: 'del',
-        target: map,
-        fn: map.delete_selected,
-        ignore_with_input: true,
-      },
+      // delete: {
+      //   key: 'backspace',
+      //   target: map,
+      //   fn: map.delete_selected,
+      //   ignore_with_input: true,
+      // },
+      // delete_del: {
+      //   key: 'del',
+      //   target: map,
+      //   fn: map.delete_selected,
+      //   ignore_with_input: true,
+      // },
       toggle_primary: {
-        key: 'p',
+        key: 'ctrl+p',
         target: map,
         fn: map.toggle_selected_node_primary,
         ignore_with_input: true,
       },
       cycle_primary: {
-        key: 'c',
+        key: 'ctrl+c',
         target: map,
         fn: map.cycle_primary_node,
         ignore_with_input: true,
       },
       direction_arrow_right: {
-        key: 'right',
+        key: 'ctrl+right',
         target: this.build_input.direction_arrow,
         fn: this.build_input.direction_arrow.right,
         ignore_with_input: true,
       },
       direction_arrow_down: {
-        key: 'down',
+        key: 'ctrl+down',
         target: this.build_input.direction_arrow,
         fn: this.build_input.direction_arrow.down,
         ignore_with_input: true,
       },
       direction_arrow_left: {
-        key: 'left',
+        key: 'ctrl+left',
         target: this.build_input.direction_arrow,
         fn: this.build_input.direction_arrow.left,
         ignore_with_input: true,
       },
       direction_arrow_up: {
-        key: 'up',
+        key: 'ctrl+up',
         target: this.build_input.direction_arrow,
         fn: this.build_input.direction_arrow.up,
         ignore_with_input: true,
