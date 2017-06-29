@@ -15,7 +15,7 @@ node_modules/
 .cache/
 *.tar.gz
 *.whl
-
+.idea/
 # built files
 dist/
 js/src/coverage/
