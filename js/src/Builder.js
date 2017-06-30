@@ -1342,23 +1342,23 @@ function _get_keys (map, zoom_container, search_bar, settings_bar, enable_editin
       target: zoom_container,
       fn: zoom_container.zoom_in,
     },
-    // zoom_in: {
-    //   key: '=',
-    //   target: zoom_container,
-    //   fn: zoom_container.zoom_in,
-    //   ignore_with_input: true,
-    // },
+    zoom_in: {
+      key: '=',
+      target: zoom_container,
+      fn: zoom_container.zoom_in,
+      ignore_with_input: true,
+    },
     zoom_out_ctrl: {
       key: 'ctrl+-',
       target: zoom_container,
       fn: zoom_container.zoom_out,
     },
-    // zoom_out: {
-    //   key: '-',
-    //   target: zoom_container,
-    //   fn: zoom_container.zoom_out,
-    //   ignore_with_input: true,
-    // },
+    zoom_out: {
+      key: '-',
+      target: zoom_container,
+      fn: zoom_container.zoom_out,
+      ignore_with_input: true,
+    },
     extent_nodes_ctrl: {
       key: 'ctrl+0',
       target: map,
