@@ -1,4 +1,3 @@
-const utils = require('./utils')
 const jsnx = require('jsnetworkx');
 
 const DEFAULT_COFACTORS = new Set([
@@ -147,8 +146,7 @@ const sortedReactionsProducts = (reactions, productId) => {
   };
 }
 
-var PathwayGraph = utils.make_class();
-PathwayGraph = {
+module.exports = {
   reactionsMetabolites: reactionsMetabolites,
   groupReactionsByMetabolite: groupReactionsByMetabolite,
   obtainCofactors: obtainCofactors,
@@ -157,4 +155,3 @@ PathwayGraph = {
   fillReactionsGraph: fillReactionsGraph,
   sortedReactionsProducts: sortedReactionsProducts
 };
-module.exports = PathwayGraph;
