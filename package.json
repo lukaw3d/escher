@@ -26,7 +26,7 @@
     "js/dist/*",
     "css/dist/*"
   ],
-  "main": "js/src/main.js",
+  "main": "js/dist/escher.js",
   "engines": {
     "node": ">=5.0"
   },
