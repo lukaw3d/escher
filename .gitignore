@@ -18,7 +18,8 @@ node_modules/
 .idea/
 
 # built files
-dist/
+# Temporarily add dist -> git links will work again
+# dist/
 js/src/inline.js
 js/src/coverage/
 py/escher/package.json
