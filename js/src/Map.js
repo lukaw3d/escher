@@ -638,7 +638,8 @@ function draw_these_knockouts(reaction_ids) {
     var knocked_out = utils.object_slice_for_bigg(this.reactions, reaction_ids);
 
     // get central nodes for reactions
-    var node_ids = _.values(utils.get_central_nodes(knocked_out));
+    var node_ids = Object.entries(utils.get_central_nodes(knocked_out))
+      .map(([r, nodes]) => nodes[0]);
     var node_subset = utils.object_slice_for_ids_ref(this.nodes, node_ids);
 
     // draw the mark
@@ -650,10 +651,11 @@ function draw_these_knockouts(reaction_ids) {
 function clear_these_knockouts(reaction_ids) {
 
     // find reactions for reaction_ids
-    var knocked_out = utils.object_slice_for_bigg(this.reactions, reaction_ids);
+    const knocked_out = utils.object_slice_for_bigg(this.reactions, reaction_ids);
 
     // get central nodes for reactions
-    var node_ids = _.values(utils.get_central_nodes(knocked_out));
+    const node_ids = Object.entries(utils.get_central_nodes(knocked_out))
+      .map(([r, nodes]) => nodes[0]);
     var node_subset = utils.object_slice_for_ids_ref(this.nodes, node_ids);
 
     var clear_mark = function(selection) {
