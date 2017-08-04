@@ -1462,7 +1462,7 @@ function _extend_and_draw_metabolite (new_nodes, selected_node_id) {
  * @param {String} starting_reaction - bigg_id for a reaction to draw.
  * @param {Coords} coords - coordinates to start drawing
  */
-function new_reaction_from_scratch (starting_reaction, coords, direction) {
+function new_reaction_from_scratch(starting_reaction, coords, direction) {
   // If there is no cobra model, error
   if (!this.cobra_model) {
     console.error('No CobraModel. Cannot build new reaction')
@@ -1652,7 +1652,7 @@ function _extend_and_draw_reaction (new_nodes, new_reactions, new_beziers,
 }
 
 /**
- * Build a new reaction starting with selected_met. Undoable.
+ * Build a new reaction starting with selected_node_id. Undoable.
  * @param {String} reaction_bigg_id - The BiGG ID of the reaction to draw.
  * @param {String} selected_node_id - The ID of the node to begin drawing with.
  * @param {Number} direction - The direction to draw in.
@@ -1681,9 +1681,7 @@ function new_reaction_for_metabolite (reaction_bigg_id, selected_node_id,
                                this.largest_ids,
                                this.settings.get_option('cofactors'),
                                direction)
-  var new_nodes = out.new_nodes
-  var new_reactions = out.new_reactions
-  var new_beziers = out.new_beziers
+  let {new_nodes, new_reactions, new_beziers} = out
 
   // Draw
   _extend_and_draw_reaction.apply(this, [ new_nodes, new_reactions,

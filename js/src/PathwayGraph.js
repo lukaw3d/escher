@@ -1,5 +1,6 @@
 const jsnx = require('jsnetworkx');
 
+// Builder options also has cofactors, use those
 const DEFAULT_COFACTORS = new Set([
   'MNXM3',  // 'ATP'
   'MNXM7',  // 'ADP'

@@ -1609,7 +1609,7 @@ function init(map_data, model_data, embedded_css, selection, options) {
     identifiers_on_map: 'bigg_id',
     highlight_missing: false,
     allow_building_duplicate_reactions: false,
-    cofactors: ['atp', 'adp', 'nad', 'nadh', 'nadp', 'nadph', 'gtp', 'gdp', 'h', 'coa', 'ump', 'h20', 'ppi'],
+    cofactors: ['atp', 'adp', 'nad', 'nadh', 'nadp', 'nadph', 'gtp', 'gdp', 'h', 'coa', 'ump', 'h2o', 'ppi'],
     // Extensions
     tooltip_component: DefaultTooltip,
     enable_tooltips: true,
@@ -5941,7 +5941,7 @@ function _extend_and_draw_reaction(new_nodes, new_reactions, new_beziers, select
 }
 
 /**
- * Build a new reaction starting with selected_met. Undoable.
+ * Build a new reaction starting with selected_node_id. Undoable.
  * @param {String} reaction_bigg_id - The BiGG ID of the reaction to draw.
  * @param {String} selected_node_id - The ID of the node to begin drawing with.
  * @param {Number} direction - The direction to draw in.
@@ -5963,11 +5963,12 @@ function new_reaction_for_metabolite(reaction_bigg_id, selected_node_id, directi
 
   // build the new reaction
   var out = build.new_reaction(reaction_bigg_id, cobra_reaction, this.cobra_model.metabolites, selected_node_id, utils.clone(selected_node), this.largest_ids, this.settings.get_option('cofactors'), direction);
-  var new_nodes = out.new_nodes;
-  var new_reactions = out.new_reactions;
-  var new_beziers = out.new_beziers;
+  var new_nodes = out.new_nodes,
+      new_reactions = out.new_reactions,
+      new_beziers = out.new_beziers;
 
   // Draw
+
   _extend_and_draw_reaction.apply(this, [new_nodes, new_reactions, new_beziers, selected_node_id]);
 
   // Clone the nodes and reactions, to redo this action later
@@ -6695,6 +6696,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 var jsnx = require('jsnetworkx');
 
+// Builder options also has cofactors, use those
 var DEFAULT_COFACTORS = new Set(['MNXM3', // 'ATP'
 'MNXM7', // 'ADP'
 'MNXM8', // 'NAD(+)'
@@ -9911,8 +9913,8 @@ function new_beziers_for_reactions(reactions) {
 var utils = require('./utils');
 
 module.exports = function (container, config) {
-    document = utils.get_document(container);
-    window = utils.get_window(container);
+    var document = utils.get_document(container);
+    var window = utils.get_window(container);
 
     config = config || {};
     config.fontSize = config.fontSize || '13px';
@@ -10933,7 +10935,7 @@ function _parse_float_or_null(x) {
 },{"./utils":34,"d3-format":157,"underscore":331}],30:[function(require,module,exports){
 'use strict';
 
-module.exports = { 'version': '1.6.0', builder_embed: 'svg.escher-svg .gene-label,svg.escher-svg .label{text-rendering:optimizelegibility;cursor:default}svg.escher-svg #mouse-node{fill:none}svg.escher-svg #canvas{stroke:#ccc;stroke-width:7px;fill:#fff}svg.escher-svg .resize-rect{fill:#000;opacity:0;stroke:none}svg.escher-svg .label{font-family:sans-serif;font-style:italic;font-weight:700;font-size:8px;fill:#000;stroke:none}svg.escher-svg .reaction-label{font-size:30px;fill:#202078;text-rendering:optimizelegibility}svg.escher-svg .node-label{font-size:20px}svg.escher-svg .gene-label{font-size:18px;fill:#202078}svg.escher-svg .text-label .label,svg.escher-svg .text-label-input{font-size:50px}svg.escher-svg .node-circle{stroke-width:2px}svg.escher-svg .midmarker-circle,svg.escher-svg .multimarker-circle{fill:#fff;fill-opacity:.2;stroke:#323232}svg.escher-svg g.selected .node-circle{stroke-width:6px;stroke:#1471c7}svg.escher-svg g.selected .label{fill:#1471c7}svg.escher-svg .metabolite-circle{stroke:#a24510;fill:#e0865b}svg.escher-svg g.selected .metabolite-circle{stroke:#050200}svg.escher-svg .segment{stroke:#334E75;stroke-width:10px;fill:none}svg.escher-svg .arrowhead{fill:#334E75}svg.escher-svg .stoichiometry-label-rect{fill:#fff;opacity:.5}svg.escher-svg .stoichiometry-label{fill:#334E75;font-size:17px}svg.escher-svg .membrane{fill:none;stroke:#fb0}svg.escher-svg .brush .extent{fill-opacity:.1;fill:#000;stroke:#fff;shape-rendering:crispEdges}svg.escher-svg #brush-container .background{fill:none}svg.escher-svg .bezier-circle{fill:#fff}svg.escher-svg .bezier-circle.b1{stroke:red}svg.escher-svg .bezier-circle.b2{stroke:#00f}svg.escher-svg .connect-line{stroke:#c8c8c8}svg.escher-svg .direction-arrow{stroke:#000;stroke-width:1px;fill:#fff;opacity:.3}svg.escher-svg .start-reaction-cursor{cursor:pointer}svg.escher-svg .start-reaction-target{stroke:#646464;fill:none;opacity:.5}svg.escher-svg .rotation-center-line{stroke:red;stroke-width:5px}svg.escher-svg .highlight{fill:#D97000;text-decoration:underline}svg.escher-svg .cursor-grab{cursor:grab;cursor:-webkit-grab}svg.escher-svg .cursor-grabbing{cursor:grabbing;cursor:-webkit-grabbing}svg.escher-svg .edit-text-cursor{cursor:text}' };
+module.exports = { 'version': '1.6.2', builder_embed: 'svg.escher-svg .gene-label,svg.escher-svg .label{text-rendering:optimizelegibility;cursor:default}svg.escher-svg #mouse-node{fill:none}svg.escher-svg #canvas{stroke:#ccc;stroke-width:7px;fill:#fff}svg.escher-svg .resize-rect{fill:#000;opacity:0;stroke:none}svg.escher-svg .label{font-family:sans-serif;font-style:italic;font-weight:700;font-size:8px;fill:#000;stroke:none}svg.escher-svg .reaction-label{font-size:30px;fill:#202078;text-rendering:optimizelegibility}svg.escher-svg .node-label{font-size:20px}svg.escher-svg .gene-label{font-size:18px;fill:#202078}svg.escher-svg .text-label .label,svg.escher-svg .text-label-input{font-size:50px}svg.escher-svg .node-circle{stroke-width:2px}svg.escher-svg .midmarker-circle,svg.escher-svg .multimarker-circle{fill:#fff;fill-opacity:.2;stroke:#323232}svg.escher-svg g.selected .node-circle{stroke-width:6px;stroke:#1471c7}svg.escher-svg g.selected .label{fill:#1471c7}svg.escher-svg .metabolite-circle{stroke:#a24510;fill:#e0865b}svg.escher-svg g.selected .metabolite-circle{stroke:#050200}svg.escher-svg .segment{stroke:#334E75;stroke-width:10px;fill:none}svg.escher-svg .arrowhead{fill:#334E75}svg.escher-svg .stoichiometry-label-rect{fill:#fff;opacity:.5}svg.escher-svg .stoichiometry-label{fill:#334E75;font-size:17px}svg.escher-svg .membrane{fill:none;stroke:#fb0}svg.escher-svg .brush .extent{fill-opacity:.1;fill:#000;stroke:#fff;shape-rendering:crispEdges}svg.escher-svg #brush-container .background{fill:none}svg.escher-svg .bezier-circle{fill:#fff}svg.escher-svg .bezier-circle.b1{stroke:red}svg.escher-svg .bezier-circle.b2{stroke:#00f}svg.escher-svg .connect-line{stroke:#c8c8c8}svg.escher-svg .direction-arrow{stroke:#000;stroke-width:1px;fill:#fff;opacity:.3}svg.escher-svg .start-reaction-cursor{cursor:pointer}svg.escher-svg .start-reaction-target{stroke:#646464;fill:none;opacity:.5}svg.escher-svg .rotation-center-line{stroke:red;stroke-width:5px}svg.escher-svg .highlight{fill:#D97000;text-decoration:underline}svg.escher-svg .cursor-grab{cursor:grab;cursor:-webkit-grab}svg.escher-svg .cursor-grabbing{cursor:grabbing;cursor:-webkit-grabbing}svg.escher-svg .edit-text-cursor{cursor:text}' };
 
 },{}],31:[function(require,module,exports){
 'use strict';
@@ -11192,6 +11194,12 @@ function set_json_or_csv_input_button(b, s, pre_fn, post_fn, failure_fn) {
 
 },{"./data_styles":29,"./utils":34}],34:[function(require,module,exports){
 'use strict';
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 /* global Blob, XMLSerializer, Image, btoa */
 
@@ -11725,29 +11733,22 @@ function object_slice_for_bigg(obj, bigg_ids) {
 }
 
 function get_central_nodes(reactions) {
+  return Object.assign.apply(Object, [{}].concat(_toConsumableArray(Object.entries(reactions).map(function (_ref) {
+    var _ref2 = _slicedToArray(_ref, 2),
+        r_id = _ref2[0],
+        segments = _ref2[1].segments;
 
-  var central_nodes = {};
-
-  _.each(_.keys(reactions), function (key) {
-
-    no_segments = _.keys(reactions[key].segments).length;
-
-    if (no_segments < 5) {
-      var nodes = _.map(reactions[key].segments, function (seg) {
-        return [seg.from_node_id, seg.to_node_id];
-      });
-    } else {
-      var nodes = _.map(_.filter(reactions[key].segments, function (segment) {
+    segments = Object.values(segments);
+    if (segments.length >= 5) {
+      segments = segments.filter(function (segment) {
         return segment.b1 === null && segment.b2 === null;
-      }), function (seg) {
-        return [seg.from_node_id, seg.to_node_id];
       });
     }
-
-    central_nodes[key] = _.intersection(nodes[0], nodes[1]);
-  });
-
-  return central_nodes;
+    var nodes = segments.map(function (seg) {
+      return [seg.from_node_id, seg.to_node_id];
+    });
+    return _defineProperty({}, r_id, Array.from(new Set(nodes[0].concat(nodes[1]))));
+  }))));
 }
 
 function c_plus_c(coords1, coords2) {

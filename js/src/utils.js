@@ -89,8 +89,8 @@ function set_options(options, defaults, must_be_float) {
   var out = {}
   for (var key in defaults) {
     var has_key = ((key in options) &&
-                   (options[key] !== null) &&
-                   (options[key] !== undefined))
+      (options[key] !== null) &&
+      (options[key] !== undefined))
     var val = (has_key ? options[key] : defaults[key])
     if (must_be_float && key in must_be_float) {
       val = parseFloat(val)
@@ -128,7 +128,7 @@ function remove_child_nodes(selection) {
 function load_css(css_path, callback) {
   var css = ""
   if (css_path) {
-    d3_text(css_path, function(error, text) {
+    d3_text(css_path, function (error, text) {
       if (error) {
         console.warn(error)
       }
@@ -140,7 +140,7 @@ function load_css(css_path, callback) {
 }
 
 
-function _ends_with (str, suffix) {
+function _ends_with(str, suffix) {
   return str.indexOf(suffix, str.length - suffix.length) !== -1
 }
 
@@ -153,7 +153,7 @@ function _ends_with (str, suffix) {
  * @param {} value - If the value is specified, just assign it and do not
  * execute the ajax query.
  */
-function load_the_file (t, file, callback, value) {
+function load_the_file(t, file, callback, value) {
   if (value) {
     if (file) console.warn('File ' + file + ' overridden by value.')
     callback.call(t, null, value)
@@ -164,9 +164,9 @@ function load_the_file (t, file, callback, value) {
     return
   }
   if (_ends_with(file, 'json')) {
-    d3_json(file, function(e, d) { callback.call(t, e, d) })
+    d3_json(file, function (e, d) { callback.call(t, e, d) })
   } else if (_ends_with(file, 'css')) {
-    d3_text(file, function(e, d) { callback.call(t, e, d) })
+    d3_text(file, function (e, d) { callback.call(t, e, d) })
   } else {
     callback.call(t, 'Unrecognized file type', null)
   }
@@ -174,7 +174,7 @@ function load_the_file (t, file, callback, value) {
 }
 
 
-function load_files (t, files_to_load, final_callback) {
+function load_files(t, files_to_load, final_callback) {
   /** Load multiple files asynchronously by calling utils.load_the_file.
 
       t: this context for callback. Should be an object.
@@ -190,12 +190,12 @@ function load_files (t, files_to_load, final_callback) {
   */
   if (files_to_load.length === 0) final_callback.call(t)
   var i = -1,
-  remaining = files_to_load.length
+    remaining = files_to_load.length
   while (++i < files_to_load.length) {
     load_the_file(
       t,
       files_to_load[i].file,
-      function(e, d) {
+      function (e, d) {
         this.call(t, e, d)
         if (!--remaining) final_callback.call(t)
       }.bind(files_to_load[i].callback),
@@ -212,7 +212,7 @@ function load_files (t, files_to_load, final_callback) {
  * Adapted from Hubert Kauker (MIT Licensed), John Resig (MIT Licensed).
  * http://stackoverflow.com/questions/7892884/simple-class-instantiation
  */
-function make_class () {
+function make_class() {
   var is_internal
   var constructor = function (args) {
     if (this instanceof constructor) {
@@ -239,7 +239,7 @@ function setup_defs(svg, style) {
   node.parentNode.insertBefore(node, node.parentNode.firstChild)
   defs.append("style")
     .attr("type", "text/css")
-      .text(style)
+    .text(style)
   return defs
 }
 
@@ -269,9 +269,9 @@ function setup_defs(svg, style) {
  *
  * @param {} exit_function - A function for exit selection.
  */
-function draw_an_object (container_sel, parent_node_selector, children_selector,
-                         object, id_key, create_function, update_function,
-                         exit_function) {
+function draw_an_object(container_sel, parent_node_selector, children_selector,
+  object, id_key, create_function, update_function,
+  exit_function) {
   var draw_object = {}
 
   for (var id in object) {
@@ -283,14 +283,14 @@ function draw_an_object (container_sel, parent_node_selector, children_selector,
   }
 
   var sel = container_sel.select(parent_node_selector)
-      .selectAll(children_selector)
-      .data(make_array_ref(draw_object, id_key),
-            function (d) { return d[id_key] })
+    .selectAll(children_selector)
+    .data(make_array_ref(draw_object, id_key),
+    function (d) { return d[id_key] })
 
   // enter: generate and place reaction
   var update_sel = create_function
-      ? create_function(sel.enter()).merge(sel)
-      : sel
+    ? create_function(sel.enter()).merge(sel)
+    : sel
 
   // update: update when necessary
   if (update_function) {
@@ -327,17 +327,17 @@ function draw_an_object (container_sel, parent_node_selector, children_selector,
  *
  * @param {} exit_function - A function for exit selection.
  */
-function draw_a_nested_object (container_sel, children_selector, object_data_key,
-                               id_key, create_function, update_function,
-                               exit_function) {
+function draw_a_nested_object(container_sel, children_selector, object_data_key,
+  id_key, create_function, update_function,
+  exit_function) {
   var sel = container_sel.selectAll(children_selector)
-      .data(function(d) { return make_array_ref(d[object_data_key], id_key) },
-            function(d) { return d[id_key] })
+    .data(function (d) { return make_array_ref(d[object_data_key], id_key) },
+    function (d) { return d[id_key] })
 
   // enter: generate and place reaction
   var update_sel = (create_function ?
-                    create_function(sel.enter()).merge(sel) :
-                    sel)
+    create_function(sel.enter()).merge(sel) :
+    sel)
 
   // update: update when necessary
   if (update_function) {
@@ -386,7 +386,7 @@ function compare_arrays(a1, a2) {
    */
   if (!a1 || !a2) return false
   if (a1.length != a2.length) return false
-  for (var i = 0, l=a1.length; i < l; i++) {
+  for (var i = 0, l = a1.length; i < l; i++) {
     if (a1[i] != a2[i]) {
       // Warning - two different object instances will never be equal: {x:20} != {x:20}
       return false
@@ -407,7 +407,7 @@ function array_to_object(arr) {
   // for each element of the array
   for (var i = 0, l = arr.length; i < l; i++) {
     var column = arr[i],
-           keys = Object.keys(column)
+      keys = Object.keys(column)
     for (var k = 0, nk = keys.length; k < nk; k++) {
       var id = keys[k]
       if (!(id in obj)) {
@@ -432,9 +432,9 @@ function array_to_object(arr) {
  * @param {T<Object|Array|*>} obj - The object to copy.
  * @return {T} The copied object.
  */
-function clone (obj) {
+function clone(obj) {
   if (_.isArray(obj))
-    return _.map(obj, function(t) { return clone(t) })
+    return _.map(obj, function (t) { return clone(t) })
   else if (_.isObject(obj))
     return _.mapObject(obj, function (t, k) { return clone(t) })
   else
@@ -468,7 +468,7 @@ function extend(obj1, obj2, overwrite) {
   }
 }
 
-function unique_concat (arrays) {
+function unique_concat(arrays) {
   var new_array = []
   arrays.forEach(function (a) {
     a.forEach(function (x) {
@@ -485,7 +485,7 @@ function unique_concat (arrays) {
  *
  * http://stackoverflow.com/questions/1960473/unique-values-in-an-array
  */
-function unique_strings_array (arr) {
+function unique_strings_array(arr) {
   var a = []
   for (var i = 0, l = arr.length; i < l; i++) {
     if (a.indexOf(arr[i]) === -1) {
@@ -501,7 +501,7 @@ function unique_strings_array (arr) {
  * milliseconds. If "immediate" is passed, trigger the function on the leading
  * edge, instead of the trailing.
  */
-function debounce (func, wait, immediate) {
+function debounce(func, wait, immediate) {
   var timeout
   return function () {
     var context = this
@@ -522,7 +522,7 @@ function debounce (func, wait, immediate) {
  * @param {} obj - An object
  * @param {} ids - An array of id strings
  */
-function object_slice_for_ids (obj, ids) {
+function object_slice_for_ids(obj, ids) {
   var subset = {}
   var i = -1
   while (++i < ids.length) {
@@ -540,7 +540,7 @@ function object_slice_for_ids (obj, ids) {
  * @param {} obj - An object.
  * @param {} ids - An array of id strings.
  */
-function object_slice_for_ids_ref (obj, ids) {
+function object_slice_for_ids_ref(obj, ids) {
   var subset = {}
   var i = -1
   while (++i < ids.length) {
@@ -553,54 +553,43 @@ function object_slice_for_ids_ref (obj, ids) {
 }
 
 function object_slice_for_bigg(obj, bigg_ids) {
-    /** Return a copy of the object with just the given bigg ids.
+  /** Return a copy of the object with just the given bigg ids.
 
-     Arguments
-     ---------
+   Arguments
+   ---------
 
-     obj: An object.
+   obj: An object.
 
-     ids: An array of bigg id strings.
+   ids: An array of bigg id strings.
 
-     */
-    var subset = {};
+   */
+  var subset = {};
 
-    _.each(_.keys(obj), function(key) {
-        if (_.contains(bigg_ids, obj[key].bigg_id)) subset[key] = obj[key];
-    });
+  _.each(_.keys(obj), function (key) {
+    if (_.contains(bigg_ids, obj[key].bigg_id)) subset[key] = obj[key];
+  });
 
-    return subset;
+  return subset;
 }
 
 function get_central_nodes(reactions) {
-
-    var central_nodes = {};
-
-    _.each(_.keys(reactions), function(key) {
-
-        no_segments = _.keys(reactions[key].segments).length;
-
-        if (no_segments < 5) {
-            var nodes = _.map(reactions[key].segments, function(seg) {
-                return [seg.from_node_id, seg.to_node_id];
-            });
-        } else {
-            var nodes = _.map(_.filter(reactions[key].segments, function(segment) {
-                return (segment.b1 === null && segment.b2 === null);
-            }), function(seg) {
-                return [seg.from_node_id, seg.to_node_id];
-            });
-        }
-
-        central_nodes[key] = _.intersection(nodes[0], nodes[1]);
+  return Object.assign({}, ...Object.entries(reactions).map(([r_id, {segments}]) => {
+    segments = Object.values(segments);
+    if (segments.length >= 5) {
+      segments = segments.filter((segment) => {
+        return (segment.b1 === null && segment.b2 === null);
+      });
+    }
+    const nodes = segments.map((seg) => {
+      return [seg.from_node_id, seg.to_node_id];
     });
-
-    return central_nodes;
+    return {[r_id]: Array.from(new Set(nodes[0].concat(nodes[1])))};
+  }));
 }
 
-function c_plus_c (coords1, coords2) {
+function c_plus_c(coords1, coords2) {
   if (coords1 === null || coords2 === null ||
-      coords1 === undefined || coords2 === undefined) {
+    coords1 === undefined || coords2 === undefined) {
     return null
   }
   return {
@@ -609,9 +598,9 @@ function c_plus_c (coords1, coords2) {
   }
 }
 
-function c_minus_c (coords1, coords2) {
+function c_minus_c(coords1, coords2) {
   if (coords1 === null || coords2 === null ||
-      coords1 === undefined || coords2 === undefined) {
+    coords1 === undefined || coords2 === undefined) {
     return null
   }
   return {
@@ -620,7 +609,7 @@ function c_minus_c (coords1, coords2) {
   }
 }
 
-function c_times_scalar (coords, scalar) {
+function c_times_scalar(coords, scalar) {
   return {
     x: coords.x * scalar,
     y: coords.y * scalar,
@@ -630,7 +619,7 @@ function c_times_scalar (coords, scalar) {
 /**
  * Download JSON file in a blob.
  */
-function download_json (json, name) {
+function download_json(json, name) {
   // Alert if blob isn't going to work
   _check_filesaver()
 
@@ -647,7 +636,7 @@ function download_json (json, name) {
  * @param {} failure_fn (optional) - A function to call if the load fails or is
  * aborted.
 */
-function load_json (f, callback, pre_fn, failure_fn) {
+function load_json(f, callback, pre_fn, failure_fn) {
   // Check for the various File API support
   if (!(window.File && window.FileReader && window.FileList && window.Blob)) {
     callback('The File APIs are not fully supported in this browser.', null)
@@ -673,11 +662,11 @@ function load_json (f, callback, pre_fn, failure_fn) {
     try { pre_fn() }
     catch (e) { console.warn(e) }
   }
-  reader.onabort = function(event) {
+  reader.onabort = function (event) {
     try { failure_fn() }
     catch (e) { console.warn(e) }
   }
-  reader.onerror = function(event) {
+  reader.onerror = function (event) {
     try { failure_fn() }
     catch (e) { console.warn(e) }
   }
@@ -696,10 +685,10 @@ function load_json (f, callback, pre_fn, failure_fn) {
  * @param {} debug_event (optional) - An event, with a string at
  * event.target.result, to load as though it was the contents of a loaded file.
  */
-function load_json_or_csv (f, csv_converter, callback, pre_fn, failure_fn,
-                           debug_event) {
+function load_json_or_csv(f, csv_converter, callback, pre_fn, failure_fn,
+  debug_event) {
   // Capture the file information.
-  var onload_function = function(event) {
+  var onload_function = function (event) {
     var result = event.target.result
     var data
     var errors
@@ -735,11 +724,11 @@ function load_json_or_csv (f, csv_converter, callback, pre_fn, failure_fn,
     try { pre_fn(); }
     catch (e) { console.warn(e); }
   }
-  reader.onabort = function(event) {
+  reader.onabort = function (event) {
     try { failure_fn(); }
     catch (e) { console.warn(e); }
   }
-  reader.onerror = function(event) {
+  reader.onerror = function (event) {
     try { failure_fn(); }
     catch (e) { console.warn(e); }
   }
@@ -754,7 +743,7 @@ function load_json_or_csv (f, csv_converter, callback, pre_fn, failure_fn,
  * @param {D3 Selection} svg_sel - The d3 selection for the SVG element
  * @param {Boolean} do_beautify - If true, then beautify the SVG output
  */
-function download_svg (name, svg_sel, do_beautify) {
+function download_svg(name, svg_sel, do_beautify) {
   // Alert if blob isn't going to work
   _check_filesaver()
 
@@ -762,12 +751,12 @@ function download_svg (name, svg_sel, do_beautify) {
   var xml = (new XMLSerializer()).serializeToString(svg_sel.node())
   if (do_beautify) xml = vkbeautify.xml(xml)
   xml = ('<?xml version="1.0" encoding="utf-8"?>\n' +
-         '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n' +
-         ' "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n' +
-         xml)
+    '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n' +
+    ' "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n' +
+    xml)
 
   // Save
-  var blob = new Blob([ xml ], { type: 'image/svg+xml' })
+  var blob = new Blob([xml], { type: 'image/svg+xml' })
   saveAs(blob, name + '.svg')
 }
 
@@ -777,7 +766,7 @@ function download_svg (name, svg_sel, do_beautify) {
  * @param {D3 Selection} svg_sel - The d3 selection for the SVG element.
  * @param {Boolean} do_beautify - If true, then beautify the SVG output.
  */
-function download_png (name, svg_sel, do_beautify) {
+function download_png(name, svg_sel, do_beautify) {
   // Alert if blob isn't going to work
   _check_filesaver()
 
@@ -785,9 +774,9 @@ function download_png (name, svg_sel, do_beautify) {
   var xml = new XMLSerializer().serializeToString(svg_sel.node())
   if (do_beautify) xml = vkbeautify.xml(xml)
   xml = ('<?xml version="1.0" encoding="utf-8"?>\n' +
-         '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n' +
-         ' "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n' +
-         xml)
+    '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n' +
+    ' "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n' +
+    xml)
 
   // Canvas to hold the image
   var canvas = document.createElement('canvas')
@@ -829,7 +818,7 @@ function download_png (name, svg_sel, do_beautify) {
   }
 }
 
-function rotate_coords_recursive (coords_array, angle, center) {
+function rotate_coords_recursive(coords_array, angle, center) {
   return coords_array.map(function (c) {
     return rotate_coords(c, angle, center)
   })
@@ -839,9 +828,9 @@ function rotate_coords_recursive (coords_array, angle, center) {
  * Calculates displacement { x: dx, y: dy } based on rotating point c around
  * center with angle.
  */
-function rotate_coords (c, angle, center) {
+function rotate_coords(c, angle, center) {
   var dx = Math.cos(-angle) * (c.x - center.x) +
-      Math.sin(-angle) * (c.y - center.y)
+    Math.sin(-angle) * (c.y - center.y)
     + center.x - c.x
   var dy = - Math.sin(-angle) * (c.x - center.x) +
     Math.cos(-angle) * (c.y - center.y)
@@ -854,34 +843,34 @@ function rotate_coords (c, angle, center) {
  * @param {Object} coords - Array of 2 coordinate objects { x: 1, y: 1 }
  * @return {Number} angle between 0 and 2PI.
  */
-function get_angle (coords) {
+function get_angle(coords) {
   var denominator = coords[1].x - coords[0].x
   var numerator = coords[1].y - coords[0].y
   if (denominator === 0 && numerator >= 0) {
-    return Math.PI/2
+    return Math.PI / 2
   } else if (denominator === 0 && numerator < 0) {
-    return 3*Math.PI/2
+    return 3 * Math.PI / 2
   } else if (denominator >= 0 && numerator >= 0) {
-    return Math.atan(numerator/denominator)
+    return Math.atan(numerator / denominator)
   } else if (denominator >= 0) {
-    return (Math.atan(numerator/denominator) + 2*Math.PI)
+    return (Math.atan(numerator / denominator) + 2 * Math.PI)
   } else {
-    return (Math.atan(numerator/denominator) + Math.PI)
+    return (Math.atan(numerator / denominator) + Math.PI)
   }
 }
 
-function to_degrees (radians) {
+function to_degrees(radians) {
   return radians * 180 / Math.PI
 }
 
 /**
  * Force to domain - PI to PI
  */
-function _angle_norm (radians) {
+function _angle_norm(radians) {
   if (radians < -Math.PI) {
-    radians = radians + Math.ceil(radians / (-2*Math.PI)) * 2*Math.PI
+    radians = radians + Math.ceil(radians / (-2 * Math.PI)) * 2 * Math.PI
   } else if (radians > Math.PI) {
-    radians = radians - Math.ceil(radians / (2*Math.PI)) * 2*Math.PI
+    radians = radians - Math.ceil(radians / (2 * Math.PI)) * 2 * Math.PI
   }
   return radians
 }
@@ -889,20 +878,20 @@ function _angle_norm (radians) {
 /**
  * Convert to radians, and force to domain -PI to PI
  */
-function to_radians_norm (degrees) {
+function to_radians_norm(degrees) {
   var radians = Math.PI / 180 * degrees
   return _angle_norm(radians)
 }
 
-function angle_for_event (displacement, point, center) {
-  var gamma =  Math.atan2((point.x - center.x), (center.y - point.y))
+function angle_for_event(displacement, point, center) {
+  var gamma = Math.atan2((point.x - center.x), (center.y - point.y))
   var beta = Math.atan2((point.x - center.x + displacement.x),
-                        (center.y - point.y - displacement.y))
+    (center.y - point.y - displacement.y))
   var angle = beta - gamma
   return angle
 }
 
-function distance (start, end) {
+function distance(start, end) {
   return Math.sqrt(Math.pow(end.y - start.y, 2) + Math.pow(end.x - start.x, 2))
 }
 
@@ -910,7 +899,7 @@ function distance (start, end) {
  * Report an error if any of the arguments are undefined. Call by passing in
  * "arguments" from any function and an array of argument names.
  */
-function check_undefined (args, names) {
+function check_undefined(args, names) {
   names.map(function (name, i) {
     if (args[i] === undefined) {
       console.error('Argument is undefined: ' + String(names[i]))
@@ -918,7 +907,7 @@ function check_undefined (args, names) {
   })
 }
 
-function compartmentalize (bigg_id, compartment_id) {
+function compartmentalize(bigg_id, compartment_id) {
   return bigg_id + '_' + compartment_id
 }
 
@@ -926,29 +915,29 @@ function compartmentalize (bigg_id, compartment_id) {
  * Returns an array of [bigg_id, compartment id]. Matches compartment ids with
  * length 1 or 2. Return [ id, null ] if no match is found.
  */
-function decompartmentalize (id) {
+function decompartmentalize(id) {
   var reg = /(.*)_([a-z0-9]{1,2})$/;
   var result = reg.exec(id)
-  return result !== null ? result.slice(1,3) : [ id, null ]
+  return result !== null ? result.slice(1, 3) : [id, null]
 }
 
-function mean (array) {
+function mean(array) {
   var sum = array.reduce(function (a, b) { return a + b })
   var avg = sum / array.length
   return avg
 }
 
-function median (array) {
-  array.sort(function(a, b) { return a - b })
+function median(array) {
+  array.sort(function (a, b) { return a - b })
   var half = Math.floor(array.length / 2)
-  if(array.length % 2 == 1) {
+  if (array.length % 2 == 1) {
     return array[half]
   } else {
-    return (array[half-1] + array[half]) / 2.0
+    return (array[half - 1] + array[half]) / 2.0
   }
 }
 
-function quartiles (array) {
+function quartiles(array) {
   array.sort(function (a, b) { return a - b })
   var half = Math.floor(array.length / 2)
   if (array.length === 1) {
@@ -966,7 +955,7 @@ function quartiles (array) {
   } else {
     return [
       median(array.slice(0, half)),
-      (array[half-1] + array[half]) / 2.0,
+      (array[half - 1] + array[half]) / 2.0,
       median(array.slice(half)),
     ]
   }
@@ -978,7 +967,7 @@ function quartiles (array) {
  * Thanks to @csharptest.net
  * http://stackoverflow.com/questions/1349404/generate-a-string-of-5-random-characters-in-javascript
  */
-function random_characters (num) {
+function random_characters(num) {
   var text = ''
   var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
   for (var i = 0; i < num; i++) {
@@ -987,7 +976,7 @@ function random_characters (num) {
   return text
 }
 
-function generate_map_id () {
+function generate_map_id() {
   return random_characters(12)
 }
 
@@ -996,7 +985,7 @@ function generate_map_id () {
  * @param {D3 Selection|DOM Node} el - A D3 Selection or DOM Node to check.
  * @param {String} tag - A tag name (case insensitive).
  */
-function check_for_parent_tag (el, tag) {
+function check_for_parent_tag(el, tag) {
   // make sure it is a node
   if (el instanceof d3_selection) {
     el = el.node()
@@ -1018,7 +1007,7 @@ function check_for_parent_tag (el, tag) {
  * @param {String} name - The short name, e.g. e_coli.iJO1366.central_metabolism.
  * @param {String} download_url (optional) - The url to prepend.
  */
-function name_to_url (name, download_url) {
+function name_to_url(name, download_url) {
   if (download_url !== undefined && download_url !== null) {
     // strip download_url
     download_url = download_url.replace(/^\/|\/$/g, '')
@@ -1037,7 +1026,7 @@ function name_to_url (name, download_url) {
  * @param {Object} options (optional) - an existing options object to which new
  * options will be added. Overwrites existing arguments in options.
  */
-function parse_url_components (the_window, options) {
+function parse_url_components(the_window, options) {
   if (_.isUndefined(options)) options = {}
 
   var query = the_window.location.search.substring(1)
@@ -1062,14 +1051,14 @@ function parse_url_components (the_window, options) {
 /**
  * Get the document for the node
  */
-function get_document (node) {
+function get_document(node) {
   return node.ownerDocument
 }
 
 /**
  * Get the window for the node
  */
-function get_window (node) {
+function get_window(node) {
   return get_document(node).defaultView
 }
 
@@ -1085,29 +1074,29 @@ function get_window (node) {
  *
  * @param {String} transform_attr - A transform string.
  */
-function d3_transform_catch (transform_attr) {
+function d3_transform_catch(transform_attr) {
   if (transform_attr.indexOf('skew') !== -1 ||
-      transform_attr.indexOf('matrix') !== -1) {
+    transform_attr.indexOf('matrix') !== -1) {
     throw new Error('d3_transform_catch does not work with skew or matrix')
   }
 
   var translate_res = (/translate\s*\(\s*([0-9.-]+)\s*,\s*([0-9.-]+)\s*\)/
-                       .exec(transform_attr))
+    .exec(transform_attr))
   var tn = _.isNull(translate_res)
   var tx = tn ? 0.0 : Number(translate_res[1])
   var ty = tn ? 0.0 : Number(translate_res[2])
 
   var rotate_res = (/rotate\s*\(\s*([0-9.-]+)\s*\)/
-                    .exec(transform_attr))
+    .exec(transform_attr))
   var rn = _.isNull(rotate_res)
   var r = rn ? 0.0 : Number(rotate_res[1])
 
   var scale_res = (/scale\s*\(\s*([0-9.-]+)\s*\)/
-                   .exec(transform_attr))
+    .exec(transform_attr))
   var sn = _.isNull(scale_res)
   var s = sn ? 0.0 : Number(scale_res[1])
 
-  return { translate: [ tx, ty ], rotate: r, scale: s, }
+  return { translate: [tx, ty], rotate: r, scale: s, }
 
   // // Create a dummy g for calculation purposes only. This will new be appended
   // // to the DOM and will be discarded once this function returns.
@@ -1150,8 +1139,8 @@ function d3_transform_catch (transform_attr) {
 /**
  * Look for name in the user agent string.
  */
-function check_browser (name) {
-  var browser = function() {
+function check_browser(name) {
+  var browser = function () {
     // Thanks to
     // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
     var ua = navigator.userAgent
@@ -1159,13 +1148,13 @@ function check_browser (name) {
     var tem
     if (/trident/i.test(M[1])) {
       tem = /\brv[ :]+(\d+)/g.exec(ua) || []
-      return 'IE '+ (tem[1] || '')
+      return 'IE ' + (tem[1] || '')
     }
     if (M[1] === 'Chrome') {
       tem = ua.match(/\b(OPR|Edge)\/(\d+)/)
       if (tem != null) return tem.slice(1).join(' ').replace('OPR', 'Opera')
     }
-    M = M[2] ? [ M[1], M[2] ]: [ navigator.appName, navigator.appVersion, '-?' ]
+    M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?']
     if ((tem = ua.match(/version\/(\d+)/i)) !== null) {
       M.splice(1, 1, tem[1])
     }
@@ -1181,8 +1170,8 @@ function check_browser (name) {
 }
 
 function calculate_fva_opacity(flux, lower, upper, small_value) {
-    var flux_positive = flux > 0 ? 1 : -1;
-    flux += small_value * flux_positive;
+  var flux_positive = flux > 0 ? 1 : -1;
+  flux += small_value * flux_positive;
 
-    return Math.abs(flux) / (Math.abs(flux) + Math.abs(upper - lower));
+  return Math.abs(flux) / (Math.abs(flux) + Math.abs(upper - lower));
 }

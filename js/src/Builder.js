@@ -147,7 +147,7 @@ function init (map_data, model_data, embedded_css, selection, options) {
     highlight_missing: false,
     allow_building_duplicate_reactions: false,
     cofactors: [ 'atp', 'adp', 'nad', 'nadh', 'nadp', 'nadph', 'gtp', 'gdp',
-                 'h', 'coa', 'ump', 'h20', 'ppi' ],
+                 'h', 'coa', 'ump', 'h2o', 'ppi' ],
     // Extensions
     tooltip_component: DefaultTooltip,
     enable_tooltips: true,
