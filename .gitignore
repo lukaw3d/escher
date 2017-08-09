@@ -19,7 +19,8 @@ node_modules/
 
 # built files
 # Temporarily add dist -> git links will work again
-# dist/
+js/build/
+js/dist/
 js/src/inline.js
 js/src/coverage/
 py/escher/package.json

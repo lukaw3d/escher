@@ -1740,7 +1740,8 @@ function new_reaction_for_metabolite (reaction_bigg_id, selected_node_id,
     this.undo_stack.push(undo_fn, redo_fn)
   }
 
-  return { undo: undo_fn, redo: redo_fn }
+  const id = Object.values(saved_reactions)[0].id
+  return { undo: undo_fn, redo: redo_fn, id}
 }
 
 function cycle_primary_node () {
@@ -2104,34 +2105,28 @@ function get_size () {
 }
 
 function zoom_to_reaction(reaction_id) {
-  var reaction = this.reactions[reaction_id],
-      new_zoom = 0.5,
-      size = this.get_size(),
-      new_pos = { x: - reaction.label_x * new_zoom + size.width/2,
-                  y: - reaction.label_y * new_zoom + size.height/2 }
-  this.zoom_container.go_to(new_zoom, new_pos)
+  const reaction = this.reactions[reaction_id],
+  this.zoom_to_item(reaction.label_x, reaction.label_y)
+
 }
 
-function zoom_to_node (node_id) {
-  var node = this.nodes[node_id]
-  var new_zoom = 0.5
-  var size = this.get_size()
-  var new_pos = {
-    x: - node.label_x * new_zoom + size.width/2,
-    y: - node.label_y * new_zoom + size.height/2,
-  }
-  this.zoom_container.go_to(new_zoom, new_pos)
+function zoom_to_node(node_id) {
+  const node = this.nodes[node_id]
+  this.zoom_to_item(node.label_x, node.label_y)
 }
 
-function zoom_to_text_label (text_label_id) {
-  var text_label = this.text_labels[text_label_id]
-  var new_zoom = 0.5
-  var size = this.get_size()
-  var new_pos = {
-    x: - text_label.x * new_zoom + size.width/2,
-    y: - text_label.y * new_zoom + size.height/2,
-  }
-  this.zoom_container.go_to(new_zoom, new_pos)
+function zoom_to_text_label(text_label_id) {
+  const text_label = this.text_labels[text_label_id]
+  this.zoom_to_item(text_label.x, text_label.y)
+}
+
+function zoom_to_item(x, y) {
+  const zoom = 0.5
+  const {width, height} = this.zoom_container.get_size()
+  this.zoom_container.go_to(zoom, {
+    x: -x * zoom + width / 2,
+    y: -y * zoom + height / 2,
+  })
 }
 
 function highlight_reaction (reaction_id) {
