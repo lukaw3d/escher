@@ -152,6 +152,7 @@ Map.prototype = {
   zoom_to_reaction: zoom_to_reaction,
   zoom_to_node: zoom_to_node,
   zoom_to_text_label: zoom_to_text_label,
+  zoom_to_item: zoom_to_item,
   highlight_reaction: highlight_reaction,
   highlight_node: highlight_node,
   highlight_text_label: highlight_text_label,
@@ -1740,7 +1741,7 @@ function new_reaction_for_metabolite (reaction_bigg_id, selected_node_id,
     this.undo_stack.push(undo_fn, redo_fn)
   }
 
-  const id = Object.values(saved_reactions)[0].id
+  const id = Object.keys(saved_reactions)[0]
   return { undo: undo_fn, redo: redo_fn, id}
 }
 
@@ -2105,9 +2106,8 @@ function get_size () {
 }
 
 function zoom_to_reaction(reaction_id) {
-  const reaction = this.reactions[reaction_id],
+  const reaction = this.reactions[reaction_id]
   this.zoom_to_item(reaction.label_x, reaction.label_y)
-
 }
 
 function zoom_to_node(node_id) {
