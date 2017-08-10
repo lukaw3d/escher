@@ -16,6 +16,7 @@ node_modules/
 *.tar.gz
 *.whl
 .idea/
+.watchmanconfig
 
 # built files
 # Temporarily add dist -> git links will work again

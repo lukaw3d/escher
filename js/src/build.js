@@ -84,9 +84,9 @@ function get_met_label_loc (angle, index, count, is_primary, bigg_id,
  * New reaction.
  * @param {Number} angle - clockwise from 'right', in degrees
  */
-function new_reaction (bigg_id, cobra_reaction, cobra_metabolites,
-                       selected_node_id, selected_node,
-                       largest_ids, cofactors, angle) {
+function new_reaction(bigg_id, cobra_reaction, cobra_metabolites,
+                      selected_node_id, selected_node,
+                      largest_ids, cofactors, angle) {
   // Convert to radians, and force to domain - PI/2 to PI/2
   angle = utils.to_radians_norm(angle)
 

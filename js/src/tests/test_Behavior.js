@@ -1,13 +1,14 @@
-var require_helper = require('./helpers/require_helper');
+const require_helper = require('./helpers/require_helper');
 
-var Behavior = require_helper('Behavior');
+const Behavior = require_helper('Behavior');
+const Settings = require_helper('Settings');
 
-var describe = require('mocha').describe;
-var it = require('mocha').it;
-var beforeEach = require('mocha').beforeEach;
-var assert = require('chai').assert;
+const describe = require('mocha').describe;
+const it = require('mocha').it;
+const beforeEach = require('mocha').beforeEach;
+const assert = require('chai').assert;
 
-var d3_body = require('./helpers/d3_body');
+const d3_body = require('./helpers/d3_body');
 
 function assert_selectable_click_attrs_on(behavior) {
     assert.isFunction(behavior.selectable_mousedown);
@@ -54,7 +55,10 @@ function assert_label_mouseover_attrs_off (behavior) {
 
 
 describe('Behavior', () => {
-  const map = { sel: d3_body }
+  const map = {
+    sel: d3_body,
+    settings: new Settings(() => {}, () => {}, []),
+  }
   let behavior
 
   beforeEach(() => { behavior = Behavior(map, null) })

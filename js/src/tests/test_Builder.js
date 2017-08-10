@@ -5,13 +5,16 @@ const d3_body = require('./helpers/d3_body')
 
 // Should test for the broken function that use utils.draw_array/object
 
-const get_map = require('./helpers/get_map')
-const get_model = require('./helpers/get_model')
+const get_map = require('./helpers/get_map').get_map
+const get_small_map = require('./helpers/get_map').get_small_map
+const get_model = require('./helpers/get_model').get_model
+const get_small_model = require('./helpers/get_model').get_small_model
 
 const describe = require('mocha').describe
 const it = require('mocha').it
 const mocha = require('mocha')
 const assert = require('assert')
+const sinon = require('sinon')
 
 function make_parent_sel (s) {
   return s.append('div').style('width', '100px').style('height', '100px')
@@ -76,5 +79,25 @@ describe('Builder', () => {
                        { type: 'min', color: '#ffffff', size: 10 },
                        { type: 'max', color: '#ffffff', size: 10 },
                      ])
+  })
+
+  describe('set_added_reactions', () => {
+    it('draws added reactions', () => {
+      const builder = Builder(get_small_map(), get_small_model(), '', make_parent_sel(d3_body),
+        { never_ask_before_quit: true, highlight_missing: true })
+      sinon.spy(builder.map, 'draw_added_reactions')
+      builder.set_added_reactions(['foo', 'bar'])
+      assert.deepEqual(builder.map.draw_added_reactions.getCall(0).args[0], ['foo', 'bar'])
+    })
+
+    it('doesn\'t redraw reactions', () => {
+      const builder = Builder(get_small_map(), get_small_model(), '', make_parent_sel(d3_body),
+        { never_ask_before_quit: true, highlight_missing: true })
+      sinon.spy(builder.map, 'draw_added_reactions')
+      builder.set_added_reactions(['foo'])
+      assert.deepEqual(builder.map.draw_added_reactions.getCall(0).args[0], ['foo'])
+      builder.set_added_reactions(['foo', 'bar'])
+      assert.deepEqual(builder.map.draw_added_reactions.getCall(1).args[0], ['bar'])
+    })
   })
 })

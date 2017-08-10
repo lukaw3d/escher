@@ -1,0 +1,26 @@
+
+{
+  "version": "0.1.0",
+  // List of configurations. Add new configurations or edit existing ones.  
+  // ONLY "node" and "mono" are supported, change "type" to switch.
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Mocha Tests",
+      "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+      "args": [
+        "--debug-brk",
+        "-u",
+        "tdd",
+        "--timeout",
+        "9999999",
+        "--files",
+        "js/src/tests/*.js",
+        "--colors",
+        "${workspaceRoot}/js/src/tests/*.js"
+      ],
+      "internalConsoleOptions": "openOnSessionStart"
+    }
+  ]
+}

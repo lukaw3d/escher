@@ -49,23 +49,24 @@
 
 */
 
-var utils = require('./utils')
-var Draw = require('./Draw')
-var Behavior = require('./Behavior')
-var Scale = require('./Scale')
-var build = require('./build')
-var UndoStack = require('./UndoStack')
-var CallbackManager = require('./CallbackManager')
-var KeyManager = require('./KeyManager')
-var Canvas = require('./Canvas')
-var data_styles = require('./data_styles')
-var SearchIndex = require('./SearchIndex')
+const utils = require('./utils')
+const Draw = require('./Draw')
+const Behavior = require('./Behavior')
+const Scale = require('./Scale')
+const build = require('./build')
+const UndoStack = require('./UndoStack')
+const CallbackManager = require('./CallbackManager')
+const KeyManager = require('./KeyManager')
+const Canvas = require('./Canvas')
+const data_styles = require('./data_styles')
+const SearchIndex = require('./SearchIndex')
+const BiggIndex = require('./BiggIndex')
 
-var bacon = require('baconjs')
-var _ = require('underscore')
-var d3_select = require('d3-selection').select
+const bacon = require('baconjs')
+const _ = require('underscore')
+const d3_select = require('d3-selection').select
 
-var Map = utils.make_class()
+const Map = utils.make_class()
 // class methods
 Map.from_data = from_data
 // instance methods
@@ -121,6 +122,8 @@ Map.prototype = {
   // draw knockouts
   draw_these_knockouts: draw_these_knockouts,
   clear_these_knockouts: clear_these_knockouts,
+  // draw added reactions
+  draw_added_reactions: draw_added_reactions,
   // draw nodes
   draw_all_nodes: draw_all_nodes,
   draw_these_nodes: draw_these_nodes,
@@ -255,6 +258,10 @@ function init (svg, css, selection, zoom_container, settings, cobra_model,
   // make the search index
   this.enable_search = enable_search
   this.search_index = new SearchIndex()
+  this.bigg_index = new BiggIndex()
+
+  // closure instance for independent reaction factory
+  this.get_independent_reaction_coordinates = independent_reaction_coordinates_factory()
 
   // map properties
   this.map_name = map_name
@@ -332,11 +339,15 @@ function from_data (map_data, svg, css, selection, zoom_container, settings,
       map.search_index.insert('n_name' + n_id, { name: node.name,
                                                  data: { type: 'metabolite',
                                                          node_id: n_id }})
+      if (node.bigg_id) {
+        map.bigg_index.insert(node.bigg_id, n_id, node)
+      }
     }
   }
 
   // Propagate coefficients and reversibility, build the connected
   // segments, add bezier points, and populate the reaction search index.
+  // TODO @matyasfodor This part could be eliminated by using extend_nodes and extent reactions.
   for (var r_id in map.reactions) {
     var reaction = map.reactions[r_id]
 
@@ -350,6 +361,9 @@ function from_data (map_data, svg, css, selection, zoom_container, settings,
                               { 'name': reaction.name,
                                 'data': { type: 'reaction',
                                           reaction_id: r_id }})
+      if (reaction.bigg_id) {
+        map.bigg_index.insert(reaction.bigg_id, r_id, reaction)
+      }
       for (var g_id in reaction.genes) {
         var gene = reaction.genes[g_id]
         map.search_index.insert('r' + r_id + '_g' + g_id,
@@ -416,9 +430,9 @@ function from_data (map_data, svg, css, selection, zoom_container, settings,
   if (enable_search) {
     for (var label_id in map.text_labels) {
       var label = map.text_labels[label_id]
-      map.search_index.insert('l'+label_id, { 'name': label.text,
-                                              'data': { type: 'text_label',
-                                                        text_label_id: label_id }})
+      map.search_index.insert(`l${label_id}`, { 'name': label.text,
+                                                'data': { type: 'text_label',
+                                                          text_label_id: label_id }})
     }
   }
 
@@ -666,6 +680,78 @@ function clear_these_knockouts(reaction_ids) {
      // draw the mark
     utils.draw_an_object(this.sel, '#nodes', '.node', node_subset, 'node_id',
                          null, clear_mark);
+}
+
+
+/**
+ * Takes a list of reactions, decides their order and puts them on the map
+ * @param [{bigg_id: String, metabolites: {[bigg_id]: coefficient<Number>}}] reactionIds 
+ */
+function draw_added_reactions(reactionIds) {
+  let reactionsWithEscherProps = []
+
+  // step 1, Get reaction objects from model
+  let reactions = reactionIds.map((bigg_id) => this.cobra_model.reactions[bigg_id])
+  let immediateReactions = [];
+  do {
+    // step 2, partition    
+    [immediateReactions, reactions] = utils.partition(reactions, _isImmediateReaction.bind(this))
+    const newReactions = immediateReactions.map((reaction) => {
+      const escherProps = _draw_immediate_reaction.call(this, reaction)
+      return {
+        ...reaction,
+        escherProps,
+      }
+    })
+    reactionsWithEscherProps = [...reactionsWithEscherProps, ...newReactions]
+  } while (immediateReactions.length > 0)
+
+  const newReactions = reactions.map((reaction) => {
+    const escherProps = this.new_reaction_from_scratch(
+      reaction.bigg_id,
+      this.get_independent_reaction_coordinates(),
+      90)
+    return {
+      ...reaction,
+      escherProps,
+    }
+  })
+  return [...reactionsWithEscherProps, ...newReactions]
+}
+
+function _draw_immediate_reaction(reaction) {
+  const [firstNode] = _primary_metabolites.call(this, Object.keys(reaction.metabolites))
+  return this.new_reaction_for_metabolite(
+    reaction.bigg_id,
+    firstNode.escherId,
+    90)
+}
+
+/**
+ * Decides if the passed reaction has any connection to the map.
+ * returns true if there are any primary metabolites already drawn on the map
+ * @param {metabolites:<metabolite_bigg_id: coef>} reaction 
+ */
+function _isImmediateReaction(reaction) {
+  return _primary_metabolites.call(this, Object.keys(reaction.metabolites)).length > 0
+}
+
+function _primary_metabolites(metabolites) {
+  const cofactors = this.settings.get_option('cofactors')
+  return metabolites
+    .filter((metaboliteId) => {
+      return !cofactors.some((c) => metaboliteId.startsWith(`${c}_`));
+    })
+    .map((metaboliteId) => this.bigg_index.getOneWithId(metaboliteId))
+    .filter(metabolite => !!metabolite)
+}
+
+function independent_reaction_coordinates_factory() {
+  let start_y = 0
+  return () => {
+    start_y += 400
+    return {x: 50, y: start_y}
+  }
 }
 
 function update_these_reactions_opacity(reactions_obj) {
@@ -943,7 +1029,7 @@ function _on_array (fn) {
  */
 function calc_data_stats (type) {
   if ([ 'reaction', 'metabolite' ].indexOf(type) === -1) {
-    throw new Error('Bad type ' + type)
+    throw new Error(`Bad type ${type}`)
   }
 
   // make the data structure
@@ -1347,11 +1433,13 @@ function delete_selectable (selected_nodes, selected_text_labels, should_draw) {
 function delete_node_data (node_ids) {
   node_ids.forEach(function(node_id) {
     if (this.enable_search && this.nodes[node_id].node_type=='metabolite') {
-      var found = (this.search_index.remove('n' + node_id)
-                   && this.search_index.remove('n_name' + node_id))
+      var found = (this.search_index.remove(`n${node_id}`)
+                   && this.search_index.remove(`n_name${node_id}`))
       if (!found)
         console.warn('Could not find deleted metabolite in search index')
     }
+    const node = this.nodes[node_id]
+    this.bigg_index.remove(node.bigg_id, node_id)
     delete this.nodes[node_id]
   }.bind(this))
 }
@@ -1407,17 +1495,19 @@ function delete_reaction_data (reaction_ids) {
     // delete reaction
     delete this.reactions[reaction_id]
     // remove from search index
-    var found = (this.search_index.remove('r' + reaction_id)
-                 && this.search_index.remove('r_name' + reaction_id))
+    var found = (this.search_index.remove(`r${reaction_id}`)
+                 && this.search_index.remove(`r_name${reaction_id}`))
+    
+    // deletes allother reactions with this bigg_id
+    this.bigg_index.remove(reaction.bigg_id, reaction_id)
     if (!found)
       console.warn('Could not find deleted reaction ' +
                    reaction_id + ' in search index')
     for (var g_id in reaction.genes) {
-      var found = (this.search_index.remove('r' + reaction_id + '_g' + g_id)
-                   && this.search_index.remove('r' + reaction_id + '_g_name' + g_id))
+      var found = (this.search_index.remove(`r${reaction_id}_g${g_id}`)
+                   && this.search_index.remove(`r${reaction_id}_g_name${g_id}`))
       if (!found)
-        console.warn('Could not find deleted gene ' +
-                     g_id + ' in search index')
+        console.warn(`Could not find deleted gene ${g_id} in search index`)
     }
   }.bind(this))
 }
@@ -1430,7 +1520,7 @@ function delete_text_label_data (text_label_ids) {
     // delete label
     delete this.text_labels[text_label_id]
     // remove from search index
-    var found = this.search_index.remove('l' + text_label_id)
+    var found = this.search_index.remove(`l${text_label_id}`)
     if (!found) {
       console.warn('Could not find deleted text label in search index')
     }
@@ -1477,7 +1567,7 @@ function new_reaction_from_scratch(starting_reaction, coords, direction) {
 
   // check for empty reactions
   if (_.size(cobra_reaction.metabolites) === 0) {
-    throw Error('No metabolites in reaction ' + cobra_reaction.bigg_id)
+    throw Error(`No metabolites in reaction ${cobra_reaction.bigg_id}`)
   }
 
   // create the first node
@@ -1514,14 +1604,12 @@ function new_reaction_from_scratch(starting_reaction, coords, direction) {
   var saved_nodes = utils.clone(new_nodes)
 
   // draw the reaction
-  var out = this.new_reaction_for_metabolite(starting_reaction,
-                                             selected_node_id,
-                                             direction, false)
+  const out = this.new_reaction_for_metabolite(starting_reaction,
+                                               selected_node_id,
+                                               direction, false)
   var reaction_redo = out.redo
   var reaction_undo = out.undo
-
-  // add to undo/redo stack
-  this.undo_stack.push(function () {
+  var undo = function () {
     // Undo. First undo the reaction.
     reaction_undo()
     // Get the nodes to delete
@@ -1532,14 +1620,19 @@ function new_reaction_from_scratch(starting_reaction, coords, direction) {
     this.clear_deleted_nodes()
     // Deselect
     this.deselect_nodes()
-  }.bind(this), function () {
+  }.bind(this);
+
+  var redo = function () {
     // Redo. Clone the nodes and reactions, to redo this action later.
     _extend_and_draw_metabolite.apply(this, [ new_nodes, selected_node_id ])
     // Now redo the reaction
     reaction_redo()
-  }.bind(this))
+  }.bind(this)
 
-  return
+  // add to undo/redo stack
+  this.undo_stack.push(undo, redo)
+
+  return Object.assign({}, out, {undo, redo})
 }
 
 /**
@@ -1559,9 +1652,17 @@ function extend_nodes (new_nodes) {
                                { 'name': node.name,
                                  'data': { type: 'metabolite',
                                            node_id: node_id }})
+      if (node.bigg_id) {
+        this.bigg_index.insert(node.bigg_id, node_id, node)
+      }
     }
   }
   utils.extend(this.nodes, new_nodes)
+  Object.entries(new_nodes).map(([n_id, node]) => {
+    if (node.bigg_id) {
+      this.bigg_index.insert(node.bigg_id, n_id, node)
+    }
+  })
 }
 
 /**
@@ -1577,6 +1678,9 @@ function extend_reactions (new_reactions) {
       this.search_index.insert('r_name' + r_id, { 'name': reaction.name,
                                                   'data': { type: 'reaction',
                                                             reaction_id: r_id }})
+      if (reaction.bigg_id) {
+        this.bigg_index.insert(reaction.bigg_id, r_id, reaction)
+      }
       for (var g_id in reaction.genes) {
         var gene = reaction.genes[g_id]
         this.search_index.insert('r' + r_id + '_g' + g_id,
@@ -1664,8 +1768,8 @@ function _extend_and_draw_reaction (new_nodes, new_reactions, new_beziers,
  * @return An object of undo and redo functions:
  *   { undo: undo_function, redo: redo_function }
  */
-function new_reaction_for_metabolite (reaction_bigg_id, selected_node_id,
-                                      direction, apply_undo_redo) {
+function new_reaction_for_metabolite(reaction_bigg_id, selected_node_id,
+                                     direction, apply_undo_redo) {
   // default args
   if (apply_undo_redo === undefined) apply_undo_redo = true
 

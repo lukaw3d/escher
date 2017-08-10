@@ -9,10 +9,10 @@ var utils = require('./utils');
 
 var SearchIndex = utils.make_class();
 SearchIndex.prototype = {
-    init: init,
-    insert: insert,
-    remove: remove,
-    find: find
+    init,
+    insert,
+    remove,
+    find,
 };
 module.exports = SearchIndex;
 
@@ -43,8 +43,8 @@ function insert(id, record, overwrite, check_record) {
      Returns undefined.
 
      */
-    if (!overwrite && (id in this.index))
-        throw new Error("id is already in the index");
+    if (!overwrite && (id in this.index)) 
+    throw new Error("id is already in the index");
     if (check_record && !(('name' in record) && ('data' in record)))
         throw new Error("malformed record");
     this.index[id] = record;

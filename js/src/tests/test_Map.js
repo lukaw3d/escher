@@ -9,13 +9,16 @@ const describe = require('mocha').describe
 const it = require('mocha').it
 const beforeEach = require('mocha').beforeEach
 const assert = require('chai').assert
+const sinon = require('sinon')
 
 const d3_body = require('./helpers/d3_body')
-const get_map = require('./helpers/get_map')
+const get_map = require('./helpers/get_map').get_map
+const get_small_map = require('./helpers/get_map').get_small_map
+const get_small_model = require('./helpers/get_model').get_small_model
 
 const _ = require('underscore')
 
-function matching_reaction (reactions, id) {
+function matching_reaction(reactions, id) {
   let match = null
   for (let r_id in reactions) {
     const r = reactions[r_id]
@@ -28,29 +31,33 @@ function matching_reaction (reactions, id) {
 }
 
 describe('Map', () => {
-  let map, svg
+  let map, svg, sel, required_options, set_option, get_option, required_conditional_options
 
   beforeEach(() => {
     // set up map
     svg = d3_body.append('svg')
-    const sel = svg.append('g')
+    sel = svg.append('g')
     // streams are required for these options
-    const required_options = { reaction_scale: [],
-                               metabolite_scale: [],
-                               reaction_styles: [],
-                               reaction_compare_style: 'diff',
-                               metabolite_styles: [],
-                               metabolite_compare_style: 'diff',
-                               cofactors: [], }
-    const required_conditional_options = [ 'reaction_scale',
-                                           'metabolite_scale', ]
-    const set_option = (key, val) => { required_options[key] = val }
-    const get_option = (key) => required_options[key]
+    required_options = {
+      reaction_scale: [],
+      metabolite_scale: [],
+      reaction_styles: [],
+      reaction_compare_style: 'diff',
+      metabolite_styles: [],
+      metabolite_compare_style: 'diff',
+      cofactors: [],
+    }
+    required_conditional_options = [
+      'reaction_scale',
+      'metabolite_scale',
+    ]
+    set_option = (key, val) => { required_options[key] = val }
+    get_option = (key) => required_options[key]
 
     map = Map.from_data(get_map(), svg, null, sel, null,
-                        new Settings(set_option, get_option,
-                                     required_conditional_options),
-                        null, true)
+      new Settings(set_option, get_option,
+        required_conditional_options),
+      null, true)
   })
 
   it('initializes', () => {
@@ -72,8 +79,8 @@ describe('Map', () => {
 
   it('loads without reaction/metabolite data', () => {
     // data
-    map.apply_reaction_data_to_map({'GLCtex': 100})
-    map.apply_metabolite_data_to_map({'glc__D_p': 3})
+    map.apply_reaction_data_to_map({ 'GLCtex': 100 })
+    map.apply_metabolite_data_to_map({ 'glc__D_p': 3 })
 
     // make sure ids are saved correctly
     for (let id in map.reactions) {
@@ -130,25 +137,25 @@ describe('Map', () => {
 
   it('search index reactions', () => {
     assert.deepEqual(map.search_index.find('glyceraldehyde-3-phosphate dehydrogenase')[0],
-                     { type: 'reaction', reaction_id: '1576769' })
+      { type: 'reaction', reaction_id: '1576769' })
     assert.deepEqual(map.search_index.find('GAPD')[0],
-                     { type: 'reaction', reaction_id: '1576769' })
+      { type: 'reaction', reaction_id: '1576769' })
     assert.deepEqual(map.search_index.find('b1779')[0],
-                     { type: 'reaction', reaction_id: '1576769' })
+      { type: 'reaction', reaction_id: '1576769' })
     assert.deepEqual(map.search_index.find('gapA')[0],
-                     { type: 'reaction', reaction_id: '1576769' })
+      { type: 'reaction', reaction_id: '1576769' })
   })
 
   it('search index metabolites', () => {
     assert.deepEqual(map.search_index.find('Glyceraldehyde-3-phosphate')[0],
-                     { type: 'metabolite', node_id: '1576545' })
+      { type: 'metabolite', node_id: '1576545' })
     assert.deepEqual(map.search_index.find('^g3p_c$')[0],
-                     { type: 'metabolite', node_id: '1576545' })
+      { type: 'metabolite', node_id: '1576545' })
   })
 
   it('search index text labels', () => {
     assert.deepEqual(map.search_index.find('TEST')[0],
-                     { type: 'text_label', text_label_id: '1' })
+      { type: 'text_label', text_label_id: '1' })
   })
 
   it('search index delete', () => {
@@ -167,54 +174,70 @@ describe('Map', () => {
   })
 
   it('search index extend reactions', () => {
-    map.extend_reactions({ '123456789': { bigg_id: 'EX_glc__D_p',
-                                          name: 'periplasmic glucose exchange',
-                                          gene_reaction_rule: 's0001',
-                                          genes: [ { 'bigg_id': 's0001',
-                                                     'name': 'spontaneous'} ] } })
+    map.extend_reactions({
+      '123456789': {
+        bigg_id: 'EX_glc__D_p',
+        name: 'periplasmic glucose exchange',
+        gene_reaction_rule: 's0001',
+        genes: [{
+          'bigg_id': 's0001',
+          'name': 'spontaneous'
+        }]
+      }
+    })
     assert.deepEqual(map.search_index.find('EX_glc__D_p')[0],
-                     { type: 'reaction', reaction_id: '123456789' })
+      { type: 'reaction', reaction_id: '123456789' })
     assert.deepEqual(map.search_index.find('periplasmic glucose exchange')[0],
-                     { type: 'reaction', reaction_id: '123456789' })
+      { type: 'reaction', reaction_id: '123456789' })
     assert.deepEqual(map.search_index.find('s0001')[0],
-                     { type: 'reaction', reaction_id: '123456789' })
+      { type: 'reaction', reaction_id: '123456789' })
     assert.deepEqual(map.search_index.find('spontaneous')[0],
-                     { type: 'reaction', reaction_id: '123456789' })
+      { type: 'reaction', reaction_id: '123456789' })
   })
 
   it('search index extend nodes', () => {
-    map.extend_nodes({ '123456789': { bigg_id: 'glc__D_p',
-                                      name: 'periplasmic glucose',
-                                      node_type: 'metabolite' }})
+    map.extend_nodes({
+      '123456789': {
+        bigg_id: 'glc__D_p',
+        name: 'periplasmic glucose',
+        node_type: 'metabolite'
+      }
+    })
     assert.deepEqual(map.search_index.find('^glc__D_p')[0],
-                     { type: 'metabolite', node_id: '123456789' })
+      { type: 'metabolite', node_id: '123456789' })
     assert.deepEqual(map.search_index.find('periplasmic glucose$')[0],
-                     { type: 'metabolite', node_id: '123456789' })
+      { type: 'metabolite', node_id: '123456789' })
   })
 
   it('search index new/edit text label', () => {
     const id = map.new_text_label({ x: 0, y: 0 }, 'TESTEST')
     assert.deepEqual(map.search_index.find('TESTEST')[0],
-                     { type: 'text_label', text_label_id: id })
+      { type: 'text_label', text_label_id: id })
     map.edit_text_label(id, 'TESTESTEST', false)
     assert.deepEqual(map.search_index.find('^TESTEST$'), [])
     assert.deepEqual(map.search_index.find('TESTESTEST')[0],
-                     { type: 'text_label', text_label_id: id })
+      { type: 'text_label', text_label_id: id })
   })
 
   it('new_reaction_from_scratch', () => {
-    const model_data = { reactions: [ { id: 'acc_tpp',
-                                        metabolites: { acc_c: 1, acc_p: -1 },
-                                        gene_reaction_rule: 'Y1234'
-                                      }
-                                    ],
-                         metabolites: [ { id: 'acc_c',
-                                          formula: 'C3H2' },
-                                        { id: 'acc_p',
-                                          formula: 'C3H2' }
-                                      ],
-                         genes: []
-                       }
+    const model_data = {
+      reactions: [{
+        id: 'acc_tpp',
+        metabolites: { acc_c: 1, acc_p: -1 },
+        gene_reaction_rule: 'Y1234'
+      }
+      ],
+      metabolites: [{
+        id: 'acc_c',
+        formula: 'C3H2'
+      },
+      {
+        id: 'acc_p',
+        formula: 'C3H2'
+      }
+      ],
+      genes: []
+    }
     const model = CobraModel.from_cobra_json(model_data)
     map.cobra_model = model
 
@@ -225,17 +248,17 @@ describe('Map', () => {
     assert.ok(match)
     // gene reaction rule
     assert.strictEqual(match.gene_reaction_rule,
-                       model_data.reactions[0].gene_reaction_rule)
+      model_data.reactions[0].gene_reaction_rule)
   })
 
   it('new_reaction_from_scratch exchanges', () => {
-    ;[ 'uptake', 'secretion' ].map(direction => {
+    ;['uptake', 'secretion'].map(direction => {
       const model_data = {
-        reactions: [ {
+        reactions: [{
           id: 'EX_glc__D_e',
           metabolites: { glc__D_e: direction === 'uptake' ? 1 : -1 },
           gene_reaction_rule: ''
-        } ],
+        }],
         metabolites: [{
           id: 'glc__D_e',
           formula: 'C6H12O6'
@@ -260,60 +283,88 @@ describe('Map', () => {
     map.apply_reaction_data_to_map(data_reactions)
     map.calc_data_stats('reaction')
     assert.deepEqual(map.get_data_statistics(),
-                     { reaction: { min: 5, median: 7.5, mean: 7.5,
-                                   Q1: 5, Q3: 10, max: 10 },
-                       metabolite: { min: null, median: null, mean: null,
-                                     Q1: null, Q3: null, max: null } })
+      {
+        reaction: {
+          min: 5, median: 7.5, mean: 7.5,
+          Q1: 5, Q3: 10, max: 10
+        },
+        metabolite: {
+          min: null, median: null, mean: null,
+          Q1: null, Q3: null, max: null
+        }
+      })
     // metabolites
     const data_metabolites = { g3p_c: [10], fdp_c: ['4'] }
     map.apply_metabolite_data_to_map(data_metabolites)
     map.calc_data_stats('metabolite')
     assert.deepEqual(map.get_data_statistics(),
-                     { reaction: { min: 5, median: 7.5, mean: 7.5,
-                                   Q1: 5, Q3: 10, max: 10 },
-                       metabolite: { min: 4, median: 10, mean: 8,
-                                     Q1: 4, Q3: 10, max: 10 } })
+      {
+        reaction: {
+          min: 5, median: 7.5, mean: 7.5,
+          Q1: 5, Q3: 10, max: 10
+        },
+        metabolite: {
+          min: 4, median: 10, mean: 8,
+          Q1: 4, Q3: 10, max: 10
+        }
+      })
   })
 
   it('get_data_statistics uses defaults for no data -- reactions', () => {
     assert.deepEqual(map.get_data_statistics(), {
-      reaction: { min: null, median: null, mean: null,
-                  Q1: null, Q3: null, max: null },
-      metabolite: { min: null, median: null, mean: null,
-                    Q1: null, Q3: null, max: null }
+      reaction: {
+        min: null, median: null, mean: null,
+        Q1: null, Q3: null, max: null
+      },
+      metabolite: {
+        min: null, median: null, mean: null,
+        Q1: null, Q3: null, max: null
+      }
     })
     const data_reactions = {}
     map.apply_reaction_data_to_map(data_reactions)
     map.calc_data_stats('reaction')
     assert.deepEqual(map.get_data_statistics(), {
-      reaction: { min: null, median: null, mean: null,
-                  Q1: null, Q3: null, max: null },
-      metabolite: { min: null, median: null, mean: null,
-                    Q1: null, Q3: null, max: null }
+      reaction: {
+        min: null, median: null, mean: null,
+        Q1: null, Q3: null, max: null
+      },
+      metabolite: {
+        min: null, median: null, mean: null,
+        Q1: null, Q3: null, max: null
+      }
     })
   })
 
   it('get_data_statistics uses defaults for no data', () => {
     assert.deepEqual(map.get_data_statistics(), {
-      reaction: { min: null, median: null, mean: null,
-                  Q1: null, Q3: null, max: null },
-      metabolite: { min: null, median: null, mean: null,
-                    Q1: null, Q3: null, max: null }
+      reaction: {
+        min: null, median: null, mean: null,
+        Q1: null, Q3: null, max: null
+      },
+      metabolite: {
+        min: null, median: null, mean: null,
+        Q1: null, Q3: null, max: null
+      }
     })
     const data_metabolites = {}
     map.apply_metabolite_data_to_map(data_metabolites)
     map.calc_data_stats('metabolite')
     assert.deepEqual(map.get_data_statistics(), {
-      reaction: { min: null, median: null, mean: null,
-                  Q1: null, Q3: null, max: null },
-      metabolite: { min: null, median: null, mean: null,
-                    Q1: null, Q3: null, max: null }
+      reaction: {
+        min: null, median: null, mean: null,
+        Q1: null, Q3: null, max: null
+      },
+      metabolite: {
+        min: null, median: null, mean: null,
+        Q1: null, Q3: null, max: null
+      }
     })
   })
 
   it('map_for_export removes unnecessary attributes', () => {
     // check that unnecessary attributes are removed
-    ;[ 'reactions', 'nodes', 'text_labels' ].forEach(function (type) {
+    ;['reactions', 'nodes', 'text_labels'].forEach(function (type) {
       const first = Object.keys(map[type])[0]
       map[type][first].to_remove = true
       const data = map.map_for_export()
@@ -322,5 +373,61 @@ describe('Map', () => {
     map.canvas.to_remove = true
     const data = map.map_for_export()
     assert.isUndefined(data[1].canvas.to_remove)
+  })
+
+  describe('draw_added_reactions', () => {
+    beforeEach(() => {
+      map = Map.from_data(get_small_map(), svg, null, sel, null,
+        new Settings(set_option, get_option,
+          required_conditional_options),
+        CobraModel.from_cobra_json(get_small_model()), true)
+    })
+
+    it('adds reaction', () => {
+      // test model is required for this
+      sinon.spy(map, 'new_reaction_for_metabolite')
+      assert.isNotOk(map.bigg_index['foo'])
+      map.draw_added_reactions(['foo'])
+      assert.equal(map.new_reaction_for_metabolite.getCall(0).args[0], 'foo')
+      assert.ok(map.bigg_index.get('foo'))
+    })
+
+    it('adds chained reactions', () => {
+      map = Map.from_data(get_small_map(), svg, null, sel, null,
+        new Settings(set_option, get_option,
+        required_conditional_options),
+        CobraModel.from_cobra_json(get_small_model()), true)
+      sinon.spy(map, 'new_reaction_for_metabolite')
+      assert.isNotOk(map.bigg_index.get('foo'))
+      map.draw_added_reactions(['foo','bar'])
+      assert.equal(map.new_reaction_for_metabolite.getCall(0).args[0], 'foo')
+      assert.equal(map.new_reaction_for_metabolite.getCall(1).args[0], 'bar')
+      assert.ok(map.bigg_index.get('foo'))
+      assert.ok(map.bigg_index.get('baz'))
+    })
+  })
+
+  describe('independent reactions', () => {
+    beforeEach(() => {
+      map = Map(svg, null, sel, null,
+        new Settings(set_option, get_option,
+          required_conditional_options),
+        CobraModel.from_cobra_json(get_small_model()), true)
+    })
+
+    it('should be able to add new reaction', () => {
+      sinon.spy(map, 'new_reaction_from_scratch')
+      map.draw_added_reactions(['foo'])
+
+      assert.deepEqual(map.new_reaction_from_scratch.getCall(0).args[1], { x: 50, y: 400 })
+    })
+
+    it('should place the second independent reaction below', () => {
+      sinon.spy(map, 'new_reaction_from_scratch')
+      map.draw_added_reactions(['foo', 'bar'])
+
+      assert.deepEqual(map.new_reaction_from_scratch.getCall(0).args[1], { x: 50, y: 400 })
+      assert.deepEqual(map.new_reaction_from_scratch.getCall(1).args[1], { x: 50, y: 800 })
+    })
   })
 })

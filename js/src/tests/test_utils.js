@@ -206,6 +206,29 @@ describe('utils.extend', () => {
   })
 })
 
+describe('utils.unique_concat', () => {
+  it('flattens the arrays', () => {
+    const arrays = [
+      [1, 2, 3,],
+      [4, 5],
+      [6,]
+    ];
+    const result = utils.unique_concat(arrays);
+    assert.deepEqual(result, [1, 2, 3, 4, 5, 6]);
+  })
+
+  it('removes duplicates', () => {
+    const arrays = [
+      [9, 1, 2],
+      [1, 2, 3, 2],
+      [4, 4, 2],
+      [],
+    ]
+    const result = utils.unique_concat(arrays);
+    assert.deepEqual(result, [9, 1 ,2, 3, 4]);
+  })
+})
+
 describe('utils.load_json_or_csv', () => {
   it('loads JSON', () => {
     utils.load_json_or_csv(null,
@@ -364,5 +387,19 @@ describe('utils.check_browser', () => {
   it('returns false if no navigator.userAgent', () => {
     global.navigator = null
     assert.isFalse(utils.check_browser('safari'))
+  })
+})
+
+describe('utils.partition', () => {
+  it('should return the list if the criteria is () => true', () => {
+    const criteria = () => true
+    const result = utils.partition([1, 2, 3, 4, 5], criteria)
+    assert.deepEqual(result, [[1, 2, 3, 4, 5], []])
+  })
+
+  it('should return the partitioned lists', () => {
+    const criteria = (number) => number < 5
+    const result = utils.partition([2, 3, 4, 5, 6, 7], criteria)
+    assert.deepEqual(result, [[2, 3, 4], [5, 6, 7]])
   })
 })

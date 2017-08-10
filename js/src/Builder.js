@@ -39,6 +39,7 @@ Builder.prototype = {
   rotate_mode: rotate_mode,
   text_mode: text_mode,
   _reaction_check_add_abs: _reaction_check_add_abs,
+  set_added_reactions: set_added_reactions,
   set_knockout_reactions: set_knockout_reactions,
   knockout_reaction: knockout_reaction,
   undo_knockout_reaction: undo_knockout_reaction,
@@ -130,6 +131,7 @@ function init (map_data, model_data, embedded_css, selection, options) {
     reaction_no_data_color: '#dcdcdc',
     reaction_no_data_size: 8,
     reaction_knockout: [],
+    added_reactions: [],
     // gene
     gene_data: null,
     and_method_in_gene_reaction_rule: 'mean',
@@ -591,12 +593,49 @@ function set_reaction_fva_data(data) {
     }
 }
 
-function set_knockout_reactions(data) {
-    this.map.clear_these_knockouts(this.options.reaction_knockout);
-    this.map.draw_these_knockouts(data);
+/**
+ * set_added_reactions
+ * 
+ * Takes a list of reactions to be added. It checks if the reaction is already drawn, if yes
+ * then it keeps it (and its position).
+ * Removes reactions that are drawn previously but not provided in the list.
+ * If any reactions are newly added, it zooms to it.
+ * 
+ * @param ['bigg_id', 'bigg_id'] added_reactions 
+ */
+function set_added_reactions(added_reactions) {
+  const prevAddedReactions = Object.assign({},
+    ...this.options.added_reactions.map(r => ({[r.bigg_id]: r}))
+  )
 
-    this.options.reaction_knockout = data;
-    this.map.set_status('')
+  const [reactionsKeep, reactionsUndo] = utils
+    .partition(Object.keys(prevAddedReactions), (bigg_id) => added_reactions.indexOf(bigg_id) > -1)
+
+  reactionsUndo.forEach((bigg_id) => {
+    prevAddedReactions[bigg_id].escherProps.undo()
+  })
+
+  added_reactions = added_reactions
+    .filter((bigg_id) => reactionsKeep.indexOf(bigg_id) === -1)
+  const addedReactionsWithEscherProps = this.map.draw_added_reactions(added_reactions)
+  const [lastNewReaction] = addedReactionsWithEscherProps.slice(-1)
+  if (lastNewReaction) {
+    this.map.zoom_to_reaction(lastNewReaction.escherProps.id)
+  }
+  this.options.added_reactions = [
+    ...reactionsKeep.map((bigg_id) => prevAddedReactions[bigg_id]),
+    ...addedReactionsWithEscherProps
+  ]
+  // @matyasfodor - not sure if this is required
+  this.map.set_status('')
+}
+
+function set_knockout_reactions(knockout_reaction_ids) {
+  this.map.clear_these_knockouts(this.options.reaction_knockout)
+  this.map.draw_these_knockouts(knockout_reaction_ids)
+
+  this.options.reaction_knockout = knockout_reaction_ids
+  this.map.set_status('')
 }
 
 function knockout_reaction(data){
@@ -1364,32 +1403,32 @@ function _get_keys (map, zoom_container, search_bar, settings_bar, enable_editin
       target: map,
       fn: map.zoom_extent_nodes,
     },
-    // extent_nodes: {
-    //   key: '0',
-    //   target: map,
-    //   fn: map.zoom_extent_nodes,
-    //   ignore_with_input: true,
-    // },
+    extent_nodes: {
+      key: '0',
+      target: map,
+      fn: map.zoom_extent_nodes,
+      ignore_with_input: true,
+    },
     extent_canvas_ctrl: {
       key: 'ctrl+1',
       target: map,
       fn: map.zoom_extent_canvas,
     },
-    // extent_canvas: {
-    //   key: '1',
-    //   target: map,
-    //   fn: map.zoom_extent_canvas,
-    //   ignore_with_input: true,
-    // },
+    extent_canvas: {
+      key: '1',
+      target: map,
+      fn: map.zoom_extent_canvas,
+      ignore_with_input: true,
+    },
     search_ctrl: {
       key: 'ctrl+f',
       fn: search_bar.toggle.bind(search_bar, true),
     },
-    // search: {
-    //   key: 'f',
-    //   fn: search_bar.toggle.bind(search_bar, true),
-    //   ignore_with_input: true,
-    // },
+    search: {
+      key: 'f',
+      fn: search_bar.toggle.bind(search_bar, true),
+      ignore_with_input: true,
+    },
     view_mode: {
       target: this,
       fn: this.view_mode,
@@ -1400,12 +1439,12 @@ function _get_keys (map, zoom_container, search_bar, settings_bar, enable_editin
       target: settings_bar,
       fn: settings_bar.toggle,
     },
-    // show_settings: {
-    //   key: ',',
-    //   target: settings_bar,
-    //   fn: settings_bar.toggle,
-    //   ignore_with_input: true,
-    // },
+    show_settings: {
+      key: ',',
+      target: settings_bar,
+      fn: settings_bar.toggle,
+      ignore_with_input: true,
+    },
   }
   if (full_screen_button) {
     utils.extend(keys, {
@@ -1414,12 +1453,12 @@ function _get_keys (map, zoom_container, search_bar, settings_bar, enable_editin
         target: map,
         fn: map.full_screen,
       },
-      // full_screen: {
-      //   key: '2',
-      //   target: map,
-      //   fn: map.full_screen,
-      //   ignore_with_input: true,
-      // },
+      full_screen: {
+        key: '2',
+        target: map,
+        fn: map.full_screen,
+        ignore_with_input: true,
+      },
     })
   }
   if (enable_editing) {
@@ -1430,12 +1469,12 @@ function _get_keys (map, zoom_container, search_bar, settings_bar, enable_editin
         fn: this.build_mode,
         ignore_with_input: true,
       },
-      // zoom_mode: {
-      //   key: 'z',
-      //   target: this,
-      //   fn: this.zoom_mode,
-      //   ignore_with_input: true,
-      // },
+      zoom_mode: {
+        key: 'z',
+        target: this,
+        fn: this.zoom_mode,
+        ignore_with_input: true,
+      },
       brush_mode: {
         key: 'ctrl+v',
         target: this,
@@ -1466,18 +1505,18 @@ function _get_keys (map, zoom_container, search_bar, settings_bar, enable_editin
         fn: map.delete_selected,
         ignore_with_input: true,
       },
-      // delete: {
-      //   key: 'backspace',
-      //   target: map,
-      //   fn: map.delete_selected,
-      //   ignore_with_input: true,
-      // },
-      // delete_del: {
-      //   key: 'del',
-      //   target: map,
-      //   fn: map.delete_selected,
-      //   ignore_with_input: true,
-      // },
+      delete: {
+        key: 'backspace',
+        target: map,
+        fn: map.delete_selected,
+        ignore_with_input: true,
+      },
+      delete_del: {
+        key: 'del',
+        target: map,
+        fn: map.delete_selected,
+        ignore_with_input: true,
+      },
       toggle_primary: {
         key: 'ctrl+p',
         target: map,

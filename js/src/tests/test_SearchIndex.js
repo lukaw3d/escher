@@ -21,7 +21,7 @@ describe('SearchIndex', () => {
   })
 
   it('insert accepts new records', () => {
-    index.insert('123', {'name': 'a', 'data': 3}, true)
+    index.insert('123', {name: 'a', data: 3}, true)
     assert.ok(index)
   })
 
@@ -31,15 +31,15 @@ describe('SearchIndex', () => {
   })
 
   it('insert throws error for repeated index', () => {
-    index.insert('123', {'name': 'a', 'data': 1})
+    index.insert('123', {name: 'a', data: 1})
     assert.throws(() => { index.insert('123', {}, false, false); },
                   'id is already in the index')
   })
 
   it('find', () => {
-    index.insert('123', {'name': 'abc', 'data': 3}, true)
-    index.insert('124', {'name': 'asdfeabn', 'data': 5}, true)
-    index.insert('125', {'name': 'a', 'data': 6}, true)
+    index.insert('123', {name: 'abc', data: 3}, true)
+    index.insert('124', {name: 'asdfeabn', data: 5}, true)
+    index.insert('125', {name: 'a', data: 6}, true)
 
     const results = index.find('ab')
     assert.include(results, 3)

@@ -40,7 +40,10 @@ module.exports = function (grunt) {
     browserify: {
       options: {
         transform: [
-          ['babelify', { presets: ['es2015'] }]
+          ['babelify', {
+            presets: ['env'],
+            plugins: ["transform-object-rest-spread"]
+          }]
         ],
         browserifyOptions: {
           standalone: 'escher',

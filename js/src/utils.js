@@ -30,7 +30,6 @@ module.exports = {
   clone: clone,
   extend: extend,
   unique_concat: unique_concat,
-  unique_strings_array: unique_strings_array,
   debounce: debounce,
   object_slice_for_ids: object_slice_for_ids,
   object_slice_for_ids_ref: object_slice_for_ids_ref,
@@ -66,7 +65,8 @@ module.exports = {
   get_window: get_window,
   d3_transform_catch: d3_transform_catch,
   check_browser: check_browser,
-  calculate_fva_opacity: calculate_fva_opacity
+  calculate_fva_opacity: calculate_fva_opacity,
+  partition: partition
 }
 
 
@@ -469,30 +469,10 @@ function extend(obj1, obj2, overwrite) {
 }
 
 function unique_concat(arrays) {
-  var new_array = []
-  arrays.forEach(function (a) {
-    a.forEach(function (x) {
-      if (new_array.indexOf(x) < 0) {
-        new_array.push(x)
-      }
-    })
-  })
-  return new_array
-}
-
-/**
- * Return unique values in array of strings.
- *
- * http://stackoverflow.com/questions/1960473/unique-values-in-an-array
- */
-function unique_strings_array(arr) {
-  var a = []
-  for (var i = 0, l = arr.length; i < l; i++) {
-    if (a.indexOf(arr[i]) === -1) {
-      a.push(arr[i])
-    }
-  }
-  return a
+  return Array.from(arrays.reduce((set, array) => {
+    array.forEach(set.add.bind(set))
+    return set
+  }, new Set()))
 }
 
 /**
@@ -572,6 +552,10 @@ function object_slice_for_bigg(obj, bigg_ids) {
   return subset;
 }
 
+/**
+ * 
+ * @param {*} reactions 
+ */
 function get_central_nodes(reactions) {
   return Object.assign({}, ...Object.entries(reactions).map(([r_id, {segments}]) => {
     segments = Object.values(segments);
@@ -583,7 +567,9 @@ function get_central_nodes(reactions) {
     const nodes = segments.map((seg) => {
       return [seg.from_node_id, seg.to_node_id];
     });
-    return {[r_id]: Array.from(new Set(nodes[0].concat(nodes[1])))};
+    // Extract a not ending node
+    const intesection = nodes[0].filter(x => new Set(nodes[1]).has(x));
+    return {[r_id]: [intesection]};
   }));
 }
 
@@ -1174,4 +1160,12 @@ function calculate_fva_opacity(flux, lower, upper, small_value) {
   flux += small_value * flux_positive;
 
   return Math.abs(flux) / (Math.abs(flux) + Math.abs(upper - lower));
+}
+
+function partition(array, criteria) {
+  return array.reduce(([truthyArray, falsyArray], element) => {
+    (criteria(element) ? truthyArray : falsyArray).push(element)
+    return [truthyArray, falsyArray]
+  },
+  [[], []])
 }
