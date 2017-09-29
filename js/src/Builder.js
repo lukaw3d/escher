@@ -326,8 +326,9 @@ function load_map (map_data, should_update_data) {
   }.bind(this))
 
   // Set the data for the map
-  if (should_update_data)
+  if (should_update_data) {
     this._update_data(false, true)
+  }
 
   // Set up the reaction input with complete.ly
   this.build_input = new BuildInput(this.selection, this.map,
@@ -373,8 +374,7 @@ function load_map (map_data, should_update_data) {
     var o = this.options[type + '_styles']
     if (on_off && o.indexOf('abs') === -1) {
       o.push('abs')
-    }
-    else if (!on_off) {
+    } else if (!on_off) {
       var i = o.indexOf('abs')
       if (i !== -1) {
         this.options[type + '_styles'] = o.slice(0, i).concat(o.slice(i + 1))
@@ -474,37 +474,38 @@ function load_map (map_data, should_update_data) {
 function _set_mode (mode) {
   this.search_bar.toggle(false)
   // input
-  this.build_input.toggle(mode == 'build')
-  this.build_input.direction_arrow.toggle(mode == 'build')
-  if (this.options.menu == 'all' && this.options.enable_editing) {
-    this._toggle_direction_buttons(mode == 'build')
+  this.build_input.toggle(mode === 'build')
+  this.build_input.direction_arrow.toggle(mode === 'build')
+  if (this.options.menu === 'all' && this.options.enable_editing) {
+    this._toggle_direction_buttons(mode === 'build')
   }
   // brush
-  this.brush.toggle(mode == 'brush')
+  this.brush.toggle(mode === 'brush')
   // zoom
-  this.zoom_container.toggle_pan_drag(mode == 'zoom' || mode == 'view')
+  this.zoom_container.toggle_pan_drag(mode === 'zoom' || mode === 'view')
   // resize canvas
-  this.map.canvas.toggle_resize(mode == 'zoom' || mode == 'brush')
+  this.map.canvas.toggle_resize(mode === 'zoom' || mode === 'brush')
   // Behavior. Be careful of the order becuase rotation and
   // toggle_selectable_drag both use Behavior.selectable_drag.
-  if (mode  ==  'rotate') {
+  if (mode === 'rotate') {
     this.map.behavior.toggle_selectable_drag(false) // before toggle_rotation_mode
     this.map.behavior.toggle_rotation_mode(true)
   } else {
-    this.map.behavior.toggle_rotation_mode(mode == 'rotate') // before toggle_selectable_drag
-    this.map.behavior.toggle_selectable_drag(mode == 'brush')
+    this.map.behavior.toggle_rotation_mode(mode === 'rotate') // before toggle_selectable_drag
+    this.map.behavior.toggle_selectable_drag(mode === 'brush')
   }
-  this.map.behavior.toggle_selectable_click(mode == 'build' || mode == 'brush')
-  this.map.behavior.toggle_label_drag(mode == 'brush')
+  this.map.behavior.toggle_selectable_click(mode === 'build' || mode === 'brush')
+  this.map.behavior.toggle_label_drag(mode === 'brush')
   this.map.behavior.toggle_label_mouseover(true)
-  this.map.behavior.toggle_text_label_edit(mode == 'text')
-  this.map.behavior.toggle_bezier_drag(mode == 'brush')
-  this.map.behavior.toggle_reaction_hover(mode=='zoom' || mode=='view')
+  this.map.behavior.toggle_text_label_edit(mode === 'text')
+  this.map.behavior.toggle_bezier_drag(mode === 'brush')
+  this.map.behavior.toggle_reaction_hover(mode === 'zoom' || mode ===  'view')
   // edit selections
-  if (mode == 'view' || mode == 'text')
+  if (mode === 'view' || mode === 'text') {
     this.map.select_none()
-  if (mode == 'rotate')
+  } else if (mode === 'rotate') {
     this.map.deselect_text_labels()
+  }
   this.map.draw_everything()
 }
 
@@ -558,7 +559,6 @@ function text_mode() {
 
 function _reaction_check_add_abs () {
   var curr_style = this.options.reaction_styles
-  var did_abs = false
   if (this.options.reaction_data !== null &&
       !this.has_custom_reaction_styles &&
       !_.contains(curr_style, 'abs')) {
@@ -586,11 +586,11 @@ function set_reaction_data (data) {
 }
 
 function set_reaction_fva_data(data) {
-    if (this.options.enable_fva_opacity) {
-        this.options.reaction_fva_data = data;
-        this.map.update_these_reactions_opacity(data);
-        this.map.set_status('');
-    }
+  if (this.options.enable_fva_opacity) {
+    this.options.reaction_fva_data = data
+    this.map.update_these_reactions_opacity(data)
+    this.map.set_status('')
+  }
 }
 
 /**
@@ -604,19 +604,18 @@ function set_reaction_fva_data(data) {
  * @param ['bigg_id', 'bigg_id'] added_reactions 
  */
 function set_added_reactions(added_reactions) {
-  const prevAddedReactions = Object.assign({},
-    ...this.options.added_reactions.map(r => ({[r.bigg_id]: r}))
-  )
+  const prevAddedReactions = this.options.added_reactions
+    .reduce((result, reaction) => ({...result, [reaction.bigg_id]: reaction}), {})
 
   const [reactionsKeep, reactionsUndo] = utils
-    .partition(Object.keys(prevAddedReactions), (bigg_id) => added_reactions.indexOf(bigg_id) > -1)
+    .partition(Object.keys(prevAddedReactions), (bigg_id) => added_reactions.includes(bigg_id))
 
-  reactionsUndo.forEach((bigg_id) => {
+  for (let bigg_id of reactionsUndo) {
     prevAddedReactions[bigg_id].escherProps.undo()
-  })
+  }
 
   added_reactions = added_reactions
-    .filter((bigg_id) => reactionsKeep.indexOf(bigg_id) === -1)
+    .filter((bigg_id) => !reactionsKeep.includes(bigg_id))
   const addedReactionsWithEscherProps = this.map.draw_added_reactions(added_reactions)
   const [lastNewReaction] = addedReactionsWithEscherProps.slice(-1)
   if (lastNewReaction) {

@@ -204,7 +204,6 @@ function load_files(t, files_to_load, final_callback) {
   }
 }
 
-
 /**
  * Create a constructor that returns a new object with our without the 'new'
  * keyword.

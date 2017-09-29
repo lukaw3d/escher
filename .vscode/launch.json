@@ -1,8 +1,6 @@
 
 {
   "version": "0.1.0",
-  // List of configurations. Add new configurations or edit existing ones.  
-  // ONLY "node" and "mono" are supported, change "type" to switch.
   "configurations": [
     {
       "type": "node",
@@ -10,11 +8,13 @@
       "name": "Mocha Tests",
       "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
       "args": [
+        "--compilers",
+        "js:babel-core/register",
         "--debug-brk",
         "-u",
         "tdd",
         "--timeout",
-        "9999999",
+        "99999",
         "--files",
         "js/src/tests/*.js",
         "--colors",

@@ -18,7 +18,7 @@ const get_small_model = require('./helpers/get_model').get_small_model
 
 const _ = require('underscore')
 
-function matching_reaction(reactions, id) {
+function matching_reaction (reactions, id) {
   let match = null
   for (let r_id in reactions) {
     const r = reactions[r_id]
@@ -45,11 +45,11 @@ describe('Map', () => {
       reaction_compare_style: 'diff',
       metabolite_styles: [],
       metabolite_compare_style: 'diff',
-      cofactors: [],
+      cofactors: []
     }
     required_conditional_options = [
       'reaction_scale',
-      'metabolite_scale',
+      'metabolite_scale'
     ]
     set_option = (key, val) => { required_options[key] = val }
     get_option = (key) => required_options[key]
@@ -395,11 +395,11 @@ describe('Map', () => {
     it('adds chained reactions', () => {
       map = Map.from_data(get_small_map(), svg, null, sel, null,
         new Settings(set_option, get_option,
-        required_conditional_options),
+          required_conditional_options),
         CobraModel.from_cobra_json(get_small_model()), true)
       sinon.spy(map, 'new_reaction_for_metabolite')
       assert.isNotOk(map.bigg_index.get('foo'))
-      map.draw_added_reactions(['foo','bar'])
+      map.draw_added_reactions(['foo', 'bar'])
       assert.equal(map.new_reaction_for_metabolite.getCall(0).args[0], 'foo')
       assert.equal(map.new_reaction_for_metabolite.getCall(1).args[0], 'bar')
       assert.ok(map.bigg_index.get('foo'))
