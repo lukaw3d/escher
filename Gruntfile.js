@@ -28,7 +28,7 @@ module.exports = function (grunt) {
       builder_embed: {
         options: {
           separator: '',
-          banner: `module.exports = {'version': ${version}, builder_embed: `,
+          banner: `module.exports = {version: "${version}", builder_embed: '`,
           footer: "'};",
         },
         files: {
