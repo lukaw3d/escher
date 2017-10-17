@@ -17,7 +17,6 @@
 
  */
 
-
 var utils = require('./utils');
 var Mousetrap = require('mousetrap');
 var _ = require('underscore');
