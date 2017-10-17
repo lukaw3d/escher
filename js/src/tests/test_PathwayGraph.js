@@ -1,5 +1,5 @@
 const assert = require('chai').assert
-const pathwayUtils = require('pathwayGraph')
+const pathwayUtils = require('../PathwayGraph')
 
 const vanillinMap = require('./data/vanillin.json')
 const myoInositol = require('./data/myo-inositol.json')
@@ -10,7 +10,7 @@ describe('pathwayUtils', () => {
   describe('reactionsMetabolites', () => {
     it('should return every metabolite', () => {
       const allMetabolites = pathwayUtils
-        .reactionsMetabolites(vanillinMap.model.reactions);
+        .reactionsMetabolites(vanillinMap.model.reactions)
 
       assert.sameMembers(allMetabolites.sort(), [
         'MNXM1', 'MNXM10', 'MNXM2',
@@ -48,7 +48,7 @@ describe('pathwayUtils', () => {
         'MNXM1': ['rhea:13021', 'rhea:13309'],
         'MNXM10': ['rhea:13021', 'rhea:13309'],
         'MNXM2': ['rhea:13021', 'rhea:13309', 'rhea:24848']
-      };
+      }
 
       const cofactors = pathwayUtils.obtainCofactors(reactionsByMetabolite)
 

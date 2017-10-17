@@ -146,13 +146,14 @@ const sortedReactionsProducts = (reactions, productId) => {
     primaryNodes: sortedReactions.map(r => traversalState.primaryNodes[r]),
   };
 }
-
-module.exports = {
+const PathwayGraph = {
   reactionsMetabolites: reactionsMetabolites,
   groupReactionsByMetabolite: groupReactionsByMetabolite,
   obtainCofactors: obtainCofactors,
   oppositeMetabolites: oppositeMetabolites,
   notSecondaryMetabolites: notSecondaryMetabolites,
-  fillReactionsGraph: fillReactionsGraph,
+  fillReactionsnGraph: fillReactionsGraph,
   sortedReactionsProducts: sortedReactionsProducts
-};
+}
+
+module.exports = PathwayGraph

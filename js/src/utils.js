@@ -69,7 +69,6 @@ module.exports = {
   partition: partition
 }
 
-
 /**
  * Check if Blob is available, and alert if it is not.
  */
