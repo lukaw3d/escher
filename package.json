@@ -111,8 +111,7 @@
       "filesaverjs": "npm:filesaverjs@^0.2.1",
       "mousetrap": "npm:mousetrap@^1.5.3",
       "underscore": "npm:underscore@^1.8.3",
-      "vkbeautify": "npm:vkbeautify@^0.99.1",
-      "jsnetworkx": "npm:jsnetworkx@^0.3.4"
+      "vkbeautify": "npm:vkbeautify@^0.99.1"
     }
   }
 }
