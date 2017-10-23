@@ -52,11 +52,11 @@ function init (selection, map, tooltip_component, zoom_container) {
 }
 
 function setup_map_callbacks (map) {
-  map.callback_manager.set('show_tooltip.tooltip_container', function (type, d) {
+  map.callback_manager.set('show_tooltip.tooltip_container', (type, d) => {
     if (map.settings.get_option('enable_tooltips')) {
       this.show(type, d)
     }
-  }.bind(this))
+  })
   map.callback_manager.set('hide_tooltip.tooltip_container',
                            this.hide.bind(this))
   map.callback_manager.set('delay_hide_tooltip.tooltip_container',

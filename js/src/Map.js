@@ -259,7 +259,7 @@ function init (svg, css, selection, zoom_container, settings, cobra_model,
   this.bigg_index = new BiggIndex()
 
   // closure instance for independent reaction factory
-  this.get_independent_reaction_coordinates = independent_reaction_coordinates_factory()
+  this.get_independent_reaction_coordinates = independent_reaction_coordinates_factory.call(this)
 
   // map properties
   this.map_name = map_name
@@ -737,20 +737,24 @@ function _isImmediateReaction (reaction) {
  * @param {*} metabolites 
  */
 function _primary_metabolites (metaboliteIds) {
+  const metanetxCofactors = this.settings.get_option('metanetxCofactors')
   const cofactors = this.settings.get_option('cofactors')
   return metaboliteIds
     .filter((metaboliteId) => {
-      return !cofactors.some((c) => metaboliteId.startsWith(`${c}_`))
+      return !(cofactors.some((c) => metaboliteId.startsWith(`${c}_`)) || metanetxCofactors.some((c) => c === metaboliteId))
     })
     .map((metaboliteId) => this.bigg_index.getOneWithId(metaboliteId))
     .filter(metabolite => !!metabolite)
 }
 
 function independent_reaction_coordinates_factory () {
-  let start_y = 0
+  let counter = 0
   return () => {
-    start_y += 400
-    return {x: 50, y: start_y}
+    const {x, y} = this.canvas.size_and_location()
+    return {
+      x: x + 250,
+      y: y + 100 + (counter++) * 400
+    }
   }
 }
 
@@ -2188,16 +2192,16 @@ function _zoom_extent (margin, mode) {
       max.y = Math.max(max.y, node.y)
     }
     // set the zoom
-    new_zoom = Math.min((size.width - margin*2) / (max.x - min.x),
-                        (size.height - margin*2) / (max.y - min.y))
-    new_pos = { x: - (min.x * new_zoom) + margin + ((size.width - margin*2 - (max.x - min.x)*new_zoom) / 2),
-                y: - (min.y * new_zoom) + margin + ((size.height - margin*2 - (max.y - min.y)*new_zoom) / 2) }
-  } else if (mode=='canvas') {
+    new_zoom = Math.min((size.width - margin * 2) / (max.x - min.x),
+                        (size.height - margin * 2) / (max.y - min.y))
+    new_pos = { x: -(min.x * new_zoom) + margin + ((size.width - margin * 2 - (max.x - min.x) * new_zoom) / 2),
+                y: -(min.y * new_zoom) + margin + ((size.height - margin * 2 - (max.y - min.y) * new_zoom) / 2) }
+  } else if (mode === 'canvas') {
     // center the canvas
-    new_zoom =  Math.min((size.width - margin*2) / (this.canvas.width),
-                         (size.height - margin*2) / (this.canvas.height))
-    new_pos = { x: - (this.canvas.x * new_zoom) + margin + ((size.width - margin*2 - this.canvas.width*new_zoom) / 2),
-                y: - (this.canvas.y * new_zoom) + margin + ((size.height - margin*2 - this.canvas.height*new_zoom) / 2) }
+    new_zoom = Math.min((size.width - margin * 2) / (this.canvas.width),
+                         (size.height - margin * 2) / (this.canvas.height))
+    new_pos = { x: -(this.canvas.x * new_zoom) + margin + ((size.width - margin * 2 - this.canvas.width * new_zoom) / 2),
+                y: -(this.canvas.y * new_zoom) + margin + ((size.height - margin * 2 - this.canvas.height * new_zoom) / 2) }
   } else {
     return console.error('Did not recognize mode')
   }
@@ -2323,8 +2327,8 @@ function map_for_export () {
   var out = [{ map_name: this.map_name,
                map_id: this.map_id,
                map_description: this.map_description,
-               homepage: "https://escher.github.io",
-               schema: "https://escher.github.io/escher/jsonschema/1-0-0#"
+               homepage: 'https://escher.github.io',
+               schema: 'https://escher.github.io/escher/jsonschema/1-0-0#'
              },
              { reactions: utils.clone(this.reactions),
                nodes: utils.clone(this.nodes),

@@ -247,7 +247,7 @@ function setup () {
   }
 }
 
-function size_and_location () {
+function size_and_location() {
   return {
     x: this.x,
     y: this.y,

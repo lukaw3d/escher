@@ -150,6 +150,22 @@ function init (map_data, model_data, embedded_css, selection, options) {
     allow_building_duplicate_reactions: false,
     cofactors: [ 'atp', 'adp', 'nad', 'nadh', 'nadp', 'nadph', 'gtp', 'gdp',
                  'h', 'coa', 'ump', 'h2o', 'ppi' ],
+    metanetxCofactors: [
+      'MNXM3', // 'ATP'
+      'MNXM7', // 'ADP'
+      'MNXM8', // 'NAD(+)'
+      'MNXM10', // 'NADH(2-)'
+      'MNXM5', // 'NADP(+)
+      'MNXM6', // 'NADPH'
+      'MNXM51', // 'GTP'
+      'MNXM30', // 'GDP'
+      'MNXM12', // 'CoA'
+      'MNXM80', // 'UMP(2-)'
+      'MNXM1', // 'H(+)'
+      'MNXM4', // 'O2'
+      'MNXM13', // 'CO(2)'
+      'MNXM2' // 'H2O'
+    ],
     // Extensions
     tooltip_component: DefaultTooltip,
     enable_tooltips: true,
