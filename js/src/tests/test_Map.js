@@ -45,7 +45,8 @@ describe('Map', () => {
       reaction_compare_style: 'diff',
       metabolite_styles: [],
       metabolite_compare_style: 'diff',
-      cofactors: []
+      cofactors: [],
+      metanetxCofactors: []
     }
     required_conditional_options = [
       'reaction_scale',
@@ -412,22 +413,24 @@ describe('Map', () => {
       map = Map(svg, null, sel, null,
         new Settings(set_option, get_option,
           required_conditional_options),
-        CobraModel.from_cobra_json(get_small_model()), true)
+        CobraModel.from_cobra_json(get_small_model()),
+        {x: 0, y: 0, width: 100, heigth: 100}
+      )
     })
 
     it('should be able to add new reaction', () => {
       sinon.spy(map, 'new_reaction_from_scratch')
       map.draw_added_reactions(['foo'])
 
-      assert.deepEqual(map.new_reaction_from_scratch.getCall(0).args[1], { x: 50, y: 400 })
+      assert.deepEqual({ x: 250, y: 100 }, map.new_reaction_from_scratch.getCall(0).args[1])
     })
 
     it('should place the second independent reaction below', () => {
       sinon.spy(map, 'new_reaction_from_scratch')
       map.draw_added_reactions(['foo', 'bar'])
 
-      assert.deepEqual(map.new_reaction_from_scratch.getCall(0).args[1], { x: 50, y: 400 })
-      assert.deepEqual(map.new_reaction_from_scratch.getCall(1).args[1], { x: 50, y: 800 })
+      assert.deepEqual({ x: 250, y: 100 }, map.new_reaction_from_scratch.getCall(0).args[1])
+      assert.deepEqual({ x: 250, y: 500 }, map.new_reaction_from_scratch.getCall(1).args[1])
     })
   })
 })
