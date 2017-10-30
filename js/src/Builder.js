@@ -621,25 +621,45 @@ function set_reaction_fva_data(data) {
  */
 function set_added_reactions(added_reactions) {
   const prevAddedReactions = this.options.added_reactions
-    .reduce((result, reaction) => ({...result, [reaction.bigg_id]: reaction}), {})
+  .reduce((result, reaction) => ({...result, [reaction.bigg_id]: reaction}), {})
 
   const [reactionsKeep, reactionsUndo] = utils
     .partition(Object.keys(prevAddedReactions), (bigg_id) => added_reactions.includes(bigg_id))
 
-  for (let bigg_id of reactionsUndo) {
-    prevAddedReactions[bigg_id].escherProps.undo()
+  reactionsUndo.forEach((bigg_id) => {
+    prevAddedReactions[bigg_id].undo()
+  })
+
+  let [newReactions, previousReactions] = utils
+    .partition(added_reactions, (bigg_id) => !reactionsKeep.includes(bigg_id))
+
+  let newlyAdded = []
+  while (true) {
+    const newReaction = this.map.draw_one_added_reaction(newReactions, [...previousReactions, ...newlyAdded])
+    if (newReaction) {
+      newlyAdded.push(newReaction)
+      newReactions = newReactions.filter((reaction) => reaction !== newReaction.bigg_id)
+    }
+    if (!newReaction || !newReactions.length) {
+      break
+    }
   }
 
-  added_reactions = added_reactions
-    .filter((bigg_id) => !reactionsKeep.includes(bigg_id))
-  const addedReactionsWithEscherProps = this.map.draw_added_reactions(added_reactions)
-  const [lastNewReaction] = addedReactionsWithEscherProps.slice(-1)
+  newReactions.forEach((reaction) => {
+    const newReaction = this.map.new_reaction_from_scratch(
+      reaction,
+      this.map.get_independent_reaction_coordinates(),
+      90)
+    newlyAdded.push(newReaction)
+  })
+
+  const [lastNewReaction] = newlyAdded.slice(-1)
   if (lastNewReaction) {
-    this.map.zoom_to_reaction(lastNewReaction.escherProps.id)
+    this.map.zoom_to_reaction(lastNewReaction.id)
   }
   this.options.added_reactions = [
     ...reactionsKeep.map((bigg_id) => prevAddedReactions[bigg_id]),
-    ...addedReactionsWithEscherProps
+    ...newlyAdded
   ]
   // @matyasfodor - not sure if this is required
   this.map.set_status('')
@@ -653,21 +673,21 @@ function set_knockout_reactions(knockout_reaction_ids) {
   this.map.set_status('')
 }
 
-function knockout_reaction(data){
-    this.options.reaction_knockout.push(data);
-    this.map.draw_these_knockouts(this.options.reaction_knockout);
-    this.map.set_status('');
+function knockout_reaction(data) {
+    this.options.reaction_knockout.push(data)
+    this.map.draw_these_knockouts(this.options.reaction_knockout)
+    this.map.set_status('')
 }
 
-function undo_knockout_reaction(data){
-    this.options.reaction_knockout.remove(data);
-    this.map.clear_these_knockouts(this.options.reaction_knockout);
-    this.map.set_status('');
+function undo_knockout_reaction(data) {
+    this.options.reaction_knockout.remove(data)
+    this.map.clear_these_knockouts(this.options.reaction_knockout)
+    this.map.set_status('')
 }
 
-function draw_knockout_reactions(){
-    this.map.draw_these_knockouts(this.options.reaction_knockout);
-    this.map.set_status('');
+function draw_knockout_reactions() {
+    this.map.draw_these_knockouts(this.options.reaction_knockout)
+    this.map.set_status('')
 }
 
 /**

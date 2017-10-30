@@ -123,7 +123,7 @@ Map.prototype = {
   draw_these_knockouts: draw_these_knockouts,
   clear_these_knockouts: clear_these_knockouts,
   // draw added reactions
-  draw_added_reactions: draw_added_reactions,
+  draw_one_added_reaction: draw_one_added_reaction,
   // draw nodes
   draw_all_nodes: draw_all_nodes,
   draw_these_nodes: draw_these_nodes,
@@ -390,8 +390,8 @@ function from_data (map_data, svg, css, selection, zoom_container, settings,
         continue
       }
 
-      var from_node = map.nodes[segment.from_node_id],
-          to_node = map.nodes[segment.to_node_id]
+      let from_node = map.nodes[segment.from_node_id]
+      let to_node = map.nodes[segment.to_node_id]
 
       // propagate coefficients
       reaction.metabolites.forEach((metabolite) => {
@@ -411,9 +411,9 @@ function from_data (map_data, svg, css, selection, zoom_container, settings,
       })
 
       // If the metabolite has no bezier points, then add them.
-      var start = map.nodes[segment.from_node_id],
-        end = map.nodes[segment.to_node_id]
-      if (start['node_type']=='metabolite' || end['node_type'] === 'metabolite') {
+      let start = map.nodes[segment.from_node_id]
+      let end = map.nodes[segment.to_node_id]
+      if (start.node_type === 'metabolite' || end.node_type === 'metabolite') {
         var midpoint = utils.c_plus_c(start, utils.c_times_scalar(utils.c_minus_c(end, start), 0.5))
         if (segment.b1 === null) segment.b1 = midpoint
         if (segment.b2 === null) segment.b2 = midpoint
@@ -660,7 +660,6 @@ function draw_these_knockouts (reaction_ids) {
   // draw the mark
   utils.draw_an_object(this.sel, '#nodes', '.node', node_subset, 'node_id',
     null, this.draw.update_knockout_mark.bind(this.draw))
-
 }
 
 function clear_these_knockouts (reaction_ids) {
@@ -682,69 +681,66 @@ function clear_these_knockouts (reaction_ids) {
 }
 
 /**
- * Takes a list of reactions, decides their order and puts them on the map
- * @param [{bigg_id: String, metabolites: {[bigg_id]: coefficient<Number>}}] reactionIds 
+ * Attempts to draw one reaction. First it tries to draw it to the already
+ * previously added reactions. If it's not working, then it looks up normal reactions
+ * returns the reactionId successfully added or undefined
+ * @param {*} reactionIds 
+ * @param {*} previouslyAddedReactionIds 
  */
-function draw_added_reactions (reactionIds) {
-  let reactionsWithEscherProps = []
-
-  // step 1, Get reaction objects from model
-  let reactions = reactionIds.map((bigg_id) => this.cobra_model.reactions[bigg_id])
-  let immediateReactions
-  ;[immediateReactions, reactions] = utils.partition(reactions, _isImmediateReaction.bind(this))
-  while (immediateReactions.length > 0) {
-    // step 2, partition    
-    const newReactions = immediateReactions.map((reaction) => {
-      const escherProps = _draw_immediate_reaction.call(this, reaction)
-      return { ...reaction, escherProps }
+function draw_one_added_reaction(reactionIds, previouslyAddedReactionIds) {
+  let added
+  const previouslyAddedRactionsMetabolites = previouslyAddedReactionIds
+    .map((reactionIds) => this.cobra_model.reactions[reactionIds])
+    .reduce((accumulator, reaction) => accumulator.concat(Object.keys(reaction.metabolites)), [])
+    .filter((metabolite) => isMetabolite.call(this, metabolite))
+    .filter((metabolite) => {
+      const nodes = this.bigg_index.getAll(metabolite)
+      return nodes.some((node) => node.node_is_primary)
     })
-    reactionsWithEscherProps = [...reactionsWithEscherProps, ...newReactions]
-    ;[immediateReactions, reactions] = utils.partition(reactions, _isImmediateReaction.bind(this))
+  // added = reactionIds.find(()
+  added = utils.findMap(reactionIds, (reactionId) => {
+    return try_drawing_reaction.call(this, reactionId, previouslyAddedRactionsMetabolites)
+  })
+  if (!added) {
+    const allMetabolites = this.bigg_index
+      .keys()
+      .filter((metabolite) => isMetabolite.call(this, metabolite))
+      .filter((metabolite) => {
+        const nodes = this.bigg_index.getAll(metabolite)
+        return nodes.some((node) => node.node_is_primary)
+      })
+    added = utils.findMap(reactionIds, (reactionId) => {
+      return try_drawing_reaction.call(this, reactionId, allMetabolites)
+    })
   }
 
-  const newReactions = reactions.map((reaction) => {
-    const escherProps = this.new_reaction_from_scratch(
-      reaction.bigg_id,
-      this.get_independent_reaction_coordinates(),
-      90)
-    return { ...reaction, escherProps }
-  })
-  return [...reactionsWithEscherProps, ...newReactions]
-}
-
-function _draw_immediate_reaction (reaction) {
-  const [firstNode] = _primary_metabolites.call(this, Object.keys(reaction.metabolites))
-  return this.new_reaction_for_metabolite(
-    reaction.bigg_id,
-    firstNode.escherId,
-    90)
+  return added
 }
 
 /**
- * Decides if the passed reaction has any connection to the map.
- * returns true if there are any primary metabolites already drawn on the map
- * @param {metabolites:<metabolite_bigg_id: coef>} reaction 
- */
-function _isImmediateReaction (reaction) {
-  return _primary_metabolites.call(this, Object.keys(reaction.metabolites)).length > 0
-}
-
-/**
- * _primary_metabolites takes a list of metaboliteIds,
- * discards the ones that are registered as cofactors
- * and fetches them from the bigg_index.
- * Not found metaboliteIds are silently thrown away.
+ * Tries to add reaction to metabolites
+ * @param {*} reactionId 
  * @param {*} metabolites 
  */
-function _primary_metabolites (metaboliteIds) {
+function try_drawing_reaction(reactionId, metabolites) {
+  const reaction = this.cobra_model.reactions[reactionId]
+  const reactionMetabolites = Object.keys(reaction.metabolites)
+  const selectedMetabolite = metabolites.find((metabolite) => {
+    return reactionMetabolites.find((reactionMetabolite) => {
+      return metabolite === reactionMetabolite
+    })
+  })
+  if (!selectedMetabolite) {
+    return false
+  }
+  const {escherId} = this.bigg_index.getOneWithId(selectedMetabolite)
+  return this.new_reaction_for_metabolite(reaction.bigg_id, escherId, 90)
+}
+
+function isMetabolite(metabolite) {
   const metanetxCofactors = this.settings.get_option('metanetxCofactors')
   const cofactors = this.settings.get_option('cofactors')
-  return metaboliteIds
-    .filter((metaboliteId) => {
-      return !(cofactors.some((c) => metaboliteId.startsWith(`${c}_`)) || metanetxCofactors.some((c) => c === metaboliteId))
-    })
-    .map((metaboliteId) => this.bigg_index.getOneWithId(metaboliteId))
-    .filter(metabolite => !!metabolite)
+  return !(cofactors.includes(utils.decompartmentalize(metabolite)[0]) || metanetxCofactors.includes(metabolite))
 }
 
 function independent_reaction_coordinates_factory () {
@@ -760,7 +756,7 @@ function independent_reaction_coordinates_factory () {
 
 function update_these_reactions_opacity (reactions_obj) {
   // find reactions for reaction_ids
-  var reaction_subset = utils.object_slice_for_bigg(this.reactions, _.keys(reactions_obj));
+  var reaction_subset = utils.object_slice_for_bigg(this.reactions, _.keys(reactions_obj))
 
   _.each(_.keys(reaction_subset), (id) => {
     var bigg_id = reaction_subset[id].bigg_id
@@ -939,7 +935,7 @@ function clear_deleted_beziers() {
   // remove deleted
   utils.draw_an_object(this.sel, '#beziers', '.bezier', this.beziers,
                        'bezier_id', null, null,
-                       function(sel) { sel.remove(); })
+                       function(sel) { sel.remove() })
 }
 
 function show_beziers () {
@@ -962,8 +958,8 @@ function toggle_beziers (on_off) {
  * @param {Array} keys - (Optional) The keys in reactions to apply data to.
  */
 function apply_reaction_data_to_map (data, keys) {
-  var styles = this.settings.get_option('reaction_styles'),
-  compare_style = this.settings.get_option('reaction_compare_style')
+  let styles = this.settings.get_option('reaction_styles')
+  let compare_style = this.settings.get_option('reaction_compare_style')
   var has_data = data_styles.apply_reaction_data_to_reactions(this.reactions,
                                                               data, styles,
                                                               compare_style,
@@ -999,10 +995,10 @@ function apply_metabolite_data_to_map (data, keys) {
  * @param {Array} keys - (Optional) The keys in reactions to apply data to.
  */
 function apply_gene_data_to_map (gene_data_obj, keys) {
-  var styles = this.settings.get_option('reaction_styles'),
-  compare_style = this.settings.get_option('reaction_compare_style'),
-  identifiers_on_map = this.settings.get_option('identifiers_on_map'),
-  and_method_in_gene_reaction_rule = this.settings.get_option('and_method_in_gene_reaction_rule')
+  let styles = this.settings.get_option('reaction_styles')
+  let compare_style = this.settings.get_option('reaction_compare_style')
+  let identifiers_on_map = this.settings.get_option('identifiers_on_map')
+  let and_method_in_gene_reaction_rule = this.settings.get_option('and_method_in_gene_reaction_rule')
 
   var has_data = data_styles.apply_gene_data_to_reactions(this.reactions, gene_data_obj,
                                                           styles, identifiers_on_map,
@@ -1057,7 +1053,7 @@ function calc_data_stats (type) {
         vals.push(node.data)
       }
     }
-  } else if (type == 'reaction') {
+  } else if (type === 'reaction') {
     for (var reaction_id in this.reactions) {
       var reaction = this.reactions[reaction_id]
       // check number
@@ -1072,12 +1068,12 @@ function calc_data_stats (type) {
   // calculate these statistics
   var quartiles = utils.quartiles(vals)
   var funcs = [
-    [ 'min',    _on_array(Math.min) ],
-    [ 'max',    _on_array(Math.max) ],
-    [ 'mean',   utils.mean ],
-    [ 'Q1',     function () { return quartiles[0] } ],
-    [ 'median', function () { return quartiles[1] } ],
-    [ 'Q3',     function () { return quartiles[2] } ],
+    ['min', _on_array(Math.min)],
+    ['max', _on_array(Math.max)],
+    ['mean', utils.mean],
+    ['Q1', () => quartiles[0]],
+    ['median', () => quartiles[1]],
+    ['Q3', () => quartiles[2]]
   ]
   funcs.forEach(function (ar) {
     var new_val
@@ -1088,7 +1084,7 @@ function calc_data_stats (type) {
       var fn = ar[1]
       new_val = fn(vals)
     }
-    if (new_val != this.data_statistics[type][name]) {
+    if (new_val !== this.data_statistics[type][name]) {
       same = false
     }
     this.data_statistics[type][name] = new_val
@@ -1114,13 +1110,6 @@ function calc_data_stats (type) {
 // ---------------------------------------------------------------------
 // Node interaction
 // ---------------------------------------------------------------------
-
-function get_coords_for_node (node_id) {
-  var node = this.nodes[node_id],
-  coords = { x: node.x, y: node.y }
-  return coords
-}
-
 function get_selected_node_ids () {
   var selected_node_ids = []
   this.sel.select('#nodes')
@@ -1193,11 +1182,11 @@ function select_metabolite_with_id(node_id) {
   // deselect all text labels
   this.deselect_text_labels()
 
-  var node_selection = this.sel.select('#nodes').selectAll('.node'),
-  coords,
-  selected_node
+  let node_selection = this.sel.select('#nodes').selectAll('.node')
+  let coords
+  let selected_node
   node_selection.classed('selected', function(d) {
-    var selected = String(d.node_id) == String(node_id)
+    var selected = String(d.node_id) === String(node_id)
     if (selected) {
       selected_node = d
       coords = { x: d.x, y: d.y }
@@ -1211,10 +1200,10 @@ function select_metabolite_with_id(node_id) {
 function select_selectable(node, d, shift_key_on) {
   /** Select a metabolite or text label, and manage the shift key. */
   shift_key_on = _.isUndefined(shift_key_on) ? false : shift_key_on
-  var classable_selection = this.sel.selectAll('#nodes,#text-labels')
-    .selectAll('.node,.text-label'),
-  classable_node
-  if (d3_select(node).attr('class').indexOf('text-label') == -1) {
+  let classable_selection = this.sel.selectAll('#nodes,#text-labels')
+    .selectAll('.node,.text-label')
+  let classable_node
+  if (d3_select(node).attr('class').indexOf('text-label') === -1) {
     // node
     classable_node = node.parentNode
   } else {
@@ -1232,10 +1221,10 @@ function select_selectable(node, d, shift_key_on) {
     d3_select(classable_node).classed('selected', true)
   }
   // run the select_metabolite callback
-  var selected_nodes = this.sel.select('#nodes').selectAll('.selected'),
-  node_count = 0,
-  coords,
-  selected_node
+  let selected_nodes = this.sel.select('#nodes').selectAll('.selected')
+  let node_count = 0
+  let coords
+  let selected_node
   selected_nodes.each(function(d) {
     selected_node = d
     coords = { x: d.x, y: d.y }
@@ -1274,12 +1263,7 @@ function select_text_label (sel, d) {
   // Find the new selection. Ignore shift key and only allow single selection
   // for now.
   var text_label_selection = this.sel.select('#text-labels').selectAll('.text-label')
-  text_label_selection.classed('selected', function(p) { return d === p; })
-  var selected_text_labels = this.sel.select('#text-labels').selectAll('.selected'),
-  coords
-  selected_text_labels.each(function(d) {
-    coords = { x: d.x, y: d.y }
-  })
+  text_label_selection.classed('selected', (p) => d === p)
   this.callback_manager.run('select_text_label')
 }
 
@@ -1297,11 +1281,12 @@ function deselect_text_labels () {
  * labels. Undoable.
  */
 function delete_selected () {
-  var selected_nodes = this.get_selected_nodes(),
-  selected_text_labels = this.get_selected_text_labels()
+  let selected_nodes = this.get_selected_nodes()
+  let selected_text_labels = this.get_selected_text_labels()
   if (Object.keys(selected_nodes).length >= 1 ||
-      Object.keys(selected_text_labels).length >= 1)
+      Object.keys(selected_text_labels).length >= 1) {
     this.delete_selectable(selected_nodes, selected_text_labels, true)
+  }
 }
 
 /**
@@ -1325,7 +1310,7 @@ function delete_selectable (selected_nodes, selected_text_labels, should_draw) {
                                   selected_text_labels) {
     // delete nodes, segments, and reactions with no segments
     this.delete_node_data(Object.keys(selected_nodes))
-    this.delete_segment_data(segment_objs); // also deletes beziers
+    this.delete_segment_data(segment_objs) // also deletes beziers
     this.delete_reaction_data(Object.keys(reactions))
     this.delete_text_label_data(Object.keys(selected_text_labels))
 
@@ -1341,14 +1326,16 @@ function delete_selectable (selected_nodes, selected_text_labels, should_draw) {
 
     // redraw
     if (should_draw) {
-      if (changed_r_scale)
+      if (changed_r_scale) {
         this.draw_all_reactions(true, true)
-      else
-        this.clear_deleted_reactions(); // also clears segments and beziers
-      if (changed_m_scale)
+      } else {
+        this.clear_deleted_reactions() // also clears segments and beziers
+      }
+      if (changed_m_scale) {
         this.draw_all_nodes(true)
-      else
+      } else {
         this.clear_deleted_nodes()
+      }
       this.clear_deleted_text_labels()
     }
   }.bind(this)
@@ -1383,9 +1370,9 @@ function delete_selectable (selected_nodes, selected_text_labels, should_draw) {
       }.bind(this))
 
       // extend the beziers
-      var seg_id = segment_obj.segment_id,
-      r_id = segment_obj.reaction_id,
-      seg_o = {}
+      let seg_id = segment_obj.segment_id
+      let r_id = segment_obj.reaction_id
+      let seg_o = {}
       seg_o[seg_id] = segment_obj.segment
       utils.extend(this.beziers, build.new_beziers_for_segments(seg_o, r_id))
 
@@ -1404,7 +1391,7 @@ function delete_selectable (selected_nodes, selected_text_labels, should_draw) {
       if (should_draw) this.draw_these_reactions(reaction_ids_to_draw)
     }
     if (this.has_data_on_nodes) {
-      var scale_changed = this.calc_data_stats('metabolite')
+      let scale_changed = this.calc_data_stats('metabolite')
       if (should_draw) {
         if (scale_changed) this.draw_all_nodes(false)
         else this.draw_these_nodes(Object.keys(saved_nodes))
@@ -1423,12 +1410,12 @@ function delete_selectable (selected_nodes, selected_text_labels, should_draw) {
     selected_nodes = utils.clone(saved_nodes)
     segment_objs_w_segments = utils.clone(saved_segment_objs_w_segments)
     reactions = utils.clone(saved_reactions)
-  }.bind(this), function () {
+  }.bind(this), () => {
     // redo
     // clone the nodes and reactions, to redo this action later
     delete_and_draw(selected_nodes, reactions, segment_objs_w_segments,
                     selected_text_labels)
-  }.bind(this))
+  })
 }
 
 /**
@@ -1436,11 +1423,12 @@ function delete_selectable (selected_nodes, selected_text_labels, should_draw) {
  */
 function delete_node_data (node_ids) {
   node_ids.forEach(function(node_id) {
-    if (this.enable_search && this.nodes[node_id].node_type=='metabolite') {
-      var found = (this.search_index.remove(`n${node_id}`)
-                   && this.search_index.remove(`n_name${node_id}`))
-      if (!found)
+    if (this.enable_search && this.nodes[node_id].node_type === 'metabolite') {
+      var found = (this.search_index.remove(`n${node_id}`) &&
+                   this.search_index.remove(`n_name${node_id}`))
+      if (!found) {
         console.warn('Could not find deleted metabolite in search index')
+      }
     }
     const node = this.nodes[node_id]
     this.bigg_index.remove(node.bigg_id, node_id)
@@ -1468,7 +1456,7 @@ function delete_segment_data (segment_objs) {
       if (!(node_id in this.nodes)) return
       var node = this.nodes[node_id]
       node.connected_segments = node.connected_segments.filter(function(so) {
-        return so.segment_id != segment_obj.segment_id
+        return so.segment_id !== segment_obj.segment_id
       })
     }.bind(this))
 
@@ -1499,19 +1487,20 @@ function delete_reaction_data (reaction_ids) {
     // delete reaction
     delete this.reactions[reaction_id]
     // remove from search index
-    var found = (this.search_index.remove(`r${reaction_id}`)
-                 && this.search_index.remove(`r_name${reaction_id}`))
-    
+    var found = (this.search_index.remove(`r${reaction_id}`) &&
+                 this.search_index.remove(`r_name${reaction_id}`))
+
     // deletes allother reactions with this bigg_id
     this.bigg_index.remove(reaction.bigg_id, reaction_id)
-    if (!found)
-      console.warn('Could not find deleted reaction ' +
-                   reaction_id + ' in search index')
+    if (!found) {
+      console.warn(`Could not find deleted reaction ${reaction_id} in search index`)
+    }
     for (var g_id in reaction.genes) {
-      var found = (this.search_index.remove(`r${reaction_id}_g${g_id}`)
-                   && this.search_index.remove(`r${reaction_id}_g_name${g_id}`))
-      if (!found)
+      const found = (this.search_index.remove(`r${reaction_id}_g${g_id}`) &&
+                     this.search_index.remove(`r${reaction_id}_g_name${g_id}`))
+      if (!found) {
         console.warn(`Could not find deleted gene ${g_id} in search index`)
+      }
     }
   }.bind(this))
 }
@@ -1520,7 +1509,7 @@ function delete_reaction_data (reaction_ids) {
  * Delete text labels for an array of IDs
  */
 function delete_text_label_data (text_label_ids) {
-  text_label_ids.forEach(function (text_label_id) {
+  text_label_ids.forEach((text_label_id) => {
     // delete label
     delete this.text_labels[text_label_id]
     // remove from search index
@@ -1528,7 +1517,7 @@ function delete_text_label_data (text_label_ids) {
     if (!found) {
       console.warn('Could not find deleted text label in search index')
     }
-  }.bind(this))
+  })
 }
 
 // ---------------------------------------------------------------------
@@ -1646,8 +1635,9 @@ function extend_nodes (new_nodes) {
   if (this.enable_search) {
     for (var node_id in new_nodes) {
       var node = new_nodes[node_id]
-      if (node.node_type != 'metabolite')
+      if (node.node_type !== 'metabolite') {
         continue
+      }
       this.search_index.insert('n' + node_id,
                                { 'name': node.bigg_id,
                                  'data': { type: 'metabolite',
@@ -1701,7 +1691,6 @@ function extend_reactions (new_reactions) {
   utils.extend(this.reactions, new_reactions)
 }
 
-
 function _extend_and_draw_reaction (new_nodes, new_reactions, new_beziers,
                                     selected_node_id) {
   this.extend_reactions(new_reactions)
@@ -1712,9 +1701,10 @@ function _extend_and_draw_reaction (new_nodes, new_reactions, new_beziers,
 
   // Apply the reaction and node data to the scales. If the scale changes,
   // redraw everything.
+  let scale_changed
   var keys = Object.keys(new_reactions)
   if (this.has_data_on_reactions) {
-    var scale_changed = false
+    scale_changed = false
     if (this.imported_reaction_data) {
       scale_changed = this.apply_reaction_data_to_map(this.imported_reaction_data,
                                                       keys)
@@ -1738,8 +1728,8 @@ function _extend_and_draw_reaction (new_nodes, new_reactions, new_beziers,
     if (this.imported_metabolite_data === null) {
       throw new Error('imported_metabolite_data should not be null')
     }
-    var scale_changed = this.apply_metabolite_data_to_map(this.imported_metabolite_data,
-                                                          node_keys)
+    scale_changed = this.apply_metabolite_data_to_map(this.imported_metabolite_data,
+                                                      node_keys)
     if (scale_changed) {
       this.draw_all_nodes(false)
     } else {
@@ -1752,7 +1742,7 @@ function _extend_and_draw_reaction (new_nodes, new_reactions, new_beziers,
   // select new primary metabolite
   for (var node_id in new_nodes) {
     var node = new_nodes[node_id]
-    if (node.node_is_primary && node_id!=selected_node_id) {
+    if (node.node_is_primary && node_id !== selected_node_id) {
       this.select_metabolite_with_id(node_id)
       var new_coords = { x: node.x, y: node.y }
       if (this.zoom_container) {
@@ -1815,8 +1805,9 @@ function new_reaction_for_metabolite(reaction_bigg_id, selected_node_id,
     new_reactions = utils.clone(saved_reactions)
     new_beziers = utils.clone(saved_beziers)
     // Draw
+    let scale_changed
     if (this.has_data_on_reactions) {
-      var scale_changed = this.calc_data_stats('reaction')
+      scale_changed = this.calc_data_stats('reaction')
       if (scale_changed) {
         this.draw_all_reactions(true, true)
       } else {
@@ -1828,7 +1819,7 @@ function new_reaction_for_metabolite(reaction_bigg_id, selected_node_id,
       this.clear_deleted_reactions(true)
     }
     if (this.has_data_on_nodes) {
-      var scale_changed = this.calc_data_stats('metabolite')
+      scale_changed = this.calc_data_stats('metabolite')
       if (scale_changed) {
         this.draw_all_nodes(true)
       } else {
@@ -1850,21 +1841,19 @@ function new_reaction_for_metabolite(reaction_bigg_id, selected_node_id,
   }
 
   const id = Object.keys(saved_reactions)[0]
-  return { undo: undo_fn, redo: redo_fn, id}
+  return {undo: undo_fn, redo: redo_fn, id, bigg_id: reaction_bigg_id}
 }
 
 function cycle_primary_node () {
   var selected_nodes = this.get_selected_nodes()
   // Get the first node
   var node_id = Object.keys(selected_nodes)[0]
-  var node = selected_nodes[node_id]
   var reactions = this.reactions
-  var nodes = this.nodes
   // make the other reactants or products secondary
   // 1. Get the connected anchor nodes for the node
-  var connected_anchor_ids = [],
-      reactions_to_draw
-  nodes[node_id].connected_segments.forEach(function(segment_info) {
+  const connected_anchor_ids = []
+  let reactions_to_draw
+  this.nodes[node_id].connected_segments.forEach(function(segment_info) {
     reactions_to_draw = [segment_info.reaction_id]
     var segment
     try {
@@ -1874,19 +1863,18 @@ function cycle_primary_node () {
       console.warn('Could not find connected segment ' + segment_info.segment_id)
       return
     }
-    connected_anchor_ids.push(segment.from_node_id==node_id ?
-                              segment.to_node_id : segment.from_node_id)
+    connected_anchor_ids.push(segment.from_node_id === node_id
+                              ? segment.to_node_id : segment.from_node_id)
   })
   // can only be connected to one anchor
-  if (connected_anchor_ids.length != 1) {
+  if (connected_anchor_ids.length !== 1) {
     console.error('Only connected nodes with a single reaction can be selected')
     return
   }
   var connected_anchor_id = connected_anchor_ids[0]
   // 2. find nodes connected to the anchor that are metabolites
   var related_node_ids = [node_id]
-  var segments = []
-  nodes[connected_anchor_id].connected_segments.forEach(function(segment_info) { // deterministic order
+  this.nodes[connected_anchor_id].connected_segments.forEach(function(segment_info) { // deterministic order
     var segment
     try {
       segment = reactions[segment_info.reaction_id].segments[segment_info.segment_id]
@@ -1895,37 +1883,38 @@ function cycle_primary_node () {
       console.warn('Could not find connected segment ' + segment_info.segment_id)
       return
     }
-    var conn_met_id = segment.from_node_id == connected_anchor_id ? segment.to_node_id : segment.from_node_id,
-        conn_node = nodes[conn_met_id]
-    if (conn_node.node_type == 'metabolite' && conn_met_id != node_id) {
+    var conn_met_id = segment.from_node_id === connected_anchor_id ? segment.to_node_id : segment.from_node_id
+    let conn_node = this.nodes[conn_met_id]
+    if (conn_node.node_type === 'metabolite' && conn_met_id !== node_id) {
       related_node_ids.push(String(conn_met_id))
     }
   })
   // 3. make sure they only have 1 reaction connection, and check if
   // they match the other selected nodes
-  for (var i=0; i<related_node_ids.length; i++) {
-    if (nodes[related_node_ids[i]].connected_segments.length > 1) {
+  for (var i = 0; i < related_node_ids.length; i++) {
+    if (this.nodes[related_node_ids[i]].connected_segments.length > 1) {
       console.error('Only connected nodes with a single reaction can be selected')
       return
     }
   }
   for (var a_selected_node_id in selected_nodes) {
-    if (a_selected_node_id!=node_id && related_node_ids.indexOf(a_selected_node_id) == -1) {
+    if (a_selected_node_id !== node_id && related_node_ids.indexOf(a_selected_node_id) === -1) {
       console.warn('Selected nodes are not on the same reaction')
       return
     }
   }
   // 4. change the primary node, and change coords, label coords, and beziers
-  var nodes_to_draw = [],
-      last_i = related_node_ids.length - 1,
-      last_node = nodes[related_node_ids[last_i]],
-      last_is_primary = last_node.node_is_primary,
-      last_coords = { x: last_node.x, y: last_node.y,
+  var nodes_to_draw = []
+  let last_i = related_node_ids.length - 1
+  let last_node = this.nodes[related_node_ids[last_i]]
+  let last_is_primary = last_node.node_is_primary
+  let last_coords = { x: last_node.x, y: last_node.y,
                       label_x: last_node.label_x, label_y: last_node.label_y }
-  if (last_node.connected_segments.length > 1)
+  if (last_node.connected_segments.length > 1) {
     console.warn('Too many connected segments for node ' + last_node.node_id)
-  var last_segment_info = last_node.connected_segments[0], // guaranteed above to have only one
-      last_segment
+  }
+  var last_segment_info = last_node.connected_segments[0] // guaranteed above to have only one
+  let last_segment
   try {
     last_segment = reactions[last_segment_info.reaction_id].segments[last_segment_info.segment_id]
     if (last_segment === undefined) throw new Error('undefined segment')
@@ -1933,16 +1922,16 @@ function cycle_primary_node () {
     console.error('Could not find connected segment ' + last_segment_info.segment_id)
     return
   }
-  var last_bezier = { b1: last_segment.b1, b2: last_segment.b2 },
-      primary_node_id
+  var last_bezier = { b1: last_segment.b1, b2: last_segment.b2 }
+  let primary_node_id
   related_node_ids.forEach(function(related_node_id) {
-    var node = nodes[related_node_id],
-    this_is_primary = node.node_is_primary,
-    these_coords = { x: node.x, y: node.y,
-                     label_x: node.label_x, label_y: node.label_y },
-    this_segment_info = node.connected_segments[0],
-    this_segment = reactions[this_segment_info.reaction_id].segments[this_segment_info.segment_id],
-    this_bezier = { b1: this_segment.b1, b2: this_segment.b2 }
+    var node = this.nodes[related_node_id]
+    let this_is_primary = node.node_is_primary
+    let these_coords = {x: node.x, y: node.y,
+                        label_x: node.label_x, label_y: node.label_y }
+    let this_segment_info = node.connected_segments[0]
+    let this_segment = reactions[this_segment_info.reaction_id].segments[this_segment_info.segment_id]
+    let this_bezier = { b1: this_segment.b1, b2: this_segment.b2 }
     node.node_is_primary = last_is_primary
     node.x = last_coords.x; node.y = last_coords.y
     node.label_x = last_coords.label_x; node.label_y = last_coords.label_y
@@ -1954,20 +1943,19 @@ function cycle_primary_node () {
     nodes_to_draw.push(related_node_id)
   })
   // 5. cycle the connected_segments array so the next time, it cycles differently
-  var old_connected_segments = nodes[connected_anchor_id].connected_segments,
-      last_i = old_connected_segments.length - 1,
-      new_connected_segments = [old_connected_segments[last_i]]
+  var old_connected_segments = this.nodes[connected_anchor_id].connected_segments
+  last_i = old_connected_segments.length - 1
+  let new_connected_segments = [old_connected_segments[last_i]]
   old_connected_segments.forEach(function(segment, i) {
-    if (last_i==i) return
+    if (last_i === i) return
     new_connected_segments.push(segment)
   })
-  nodes[connected_anchor_id].connected_segments = new_connected_segments
+  this.nodes[connected_anchor_id].connected_segments = new_connected_segments
   // 6. draw the nodes
   this.draw_these_nodes(nodes_to_draw)
   this.draw_these_reactions(reactions_to_draw)
   // 7. select the primary node
   this.select_metabolite_with_id(primary_node_id)
-  return
 }
 
 function toggle_selected_node_primary() {
@@ -1976,17 +1964,17 @@ function toggle_selected_node_primary() {
       Undoable.
 
   */
-  var selected_node_ids = this.get_selected_node_ids(),
-  go = function(ids) {
-    var nodes_to_draw = {},
-    hide_secondary_metabolites = this.settings.get_option('hide_secondary_metabolites')
+  const selected_node_ids = this.get_selected_node_ids()
+  const go = function(ids) {
+    const nodes_to_draw = {}
+    const hide_secondary_metabolites = this.settings.get_option('hide_secondary_metabolites')
     ids.forEach(function(id) {
       if (!(id in this.nodes)) {
         console.warn('Could not find node: ' + id)
         return
       }
       var node = this.nodes[id]
-      if (node.node_type == 'metabolite') {
+      if (node.node_type === 'metabolite') {
         node.node_is_primary = !node.node_is_primary
         nodes_to_draw[id] = node
       }
@@ -1995,8 +1983,8 @@ function toggle_selected_node_primary() {
     this.draw_these_nodes(Object.keys(nodes_to_draw))
     // draw associated reactions
     if (hide_secondary_metabolites) {
-      var out = this.segments_and_reactions_for_nodes(nodes_to_draw),
-      reaction_ids_to_draw_o = {}
+      var out = this.segments_and_reactions_for_nodes(nodes_to_draw)
+      let reaction_ids_to_draw_o = {}
       for (var id in out.segment_objs_w_segments) {
         var r_id = out.segment_objs_w_segments[id].reaction_id
         reaction_ids_to_draw_o[r_id] = true
@@ -2020,10 +2008,10 @@ function segments_and_reactions_for_nodes(nodes) {
   /** Get segments and reactions that should be deleted with node deletions
 
    */
-  var segment_objs_w_segments = {},
-  these_reactions = {},
-  segment_ids_for_reactions = {},
-  reactions = this.reactions
+  var segment_objs_w_segments = {}
+  let these_reactions = {}
+  let segment_ids_for_reactions = {}
+  let reactions = this.reactions
   // for each node
   for (var node_id in nodes) {
     var node = nodes[node_id]
@@ -2040,18 +2028,19 @@ function segments_and_reactions_for_nodes(nodes) {
       var segment_obj_w_segment = utils.clone(segment_obj)
       segment_obj_w_segment['segment'] = utils.clone(segment)
       segment_objs_w_segments[segment_obj.segment_id] = segment_obj_w_segment
-      if (!(segment_obj.reaction_id in segment_ids_for_reactions))
+      if (!(segment_obj.reaction_id in segment_ids_for_reactions)) {
         segment_ids_for_reactions[segment_obj.reaction_id] = []
+      }
       segment_ids_for_reactions[segment_obj.reaction_id].push(segment_obj.segment_id)
     })
   }
   // find the reactions that should be deleted because they have no segments left
   for (var reaction_id in segment_ids_for_reactions) {
-    var reaction = reactions[reaction_id],
-           these_ids = segment_ids_for_reactions[reaction_id],
-           has = true
+    var reaction = reactions[reaction_id]
+    let these_ids = segment_ids_for_reactions[reaction_id]
+    let has = true
     for (var segment_id in reaction.segments) {
-      if (these_ids.indexOf(segment_id)==-1) has = false
+      if (these_ids.indexOf(segment_id) === -1) has = false
     }
     if (has) these_reactions[reaction_id] = reaction
   }
@@ -2233,20 +2222,20 @@ function zoom_to_item(x, y) {
   const {width, height} = this.zoom_container.get_size()
   this.zoom_container.go_to(zoom, {
     x: -x * zoom + width / 2,
-    y: -y * zoom + height / 2,
+    y: -y * zoom + height / 2
   })
 }
 
 function highlight_reaction (reaction_id) {
-  this.highlight(this.sel.selectAll('#r'+reaction_id).selectAll('text'))
+  this.highlight(this.sel.selectAll(`#r${reaction_id}`).selectAll('text'))
 }
 
 function highlight_node (node_id) {
-  this.highlight(this.sel.selectAll('#n'+node_id).selectAll('text'))
+  this.highlight(this.sel.selectAll(`#n${node_id}`).selectAll('text'))
 }
 
 function highlight_text_label (text_label_id) {
-  this.highlight(this.sel.selectAll('#l'+text_label_id).selectAll('text'))
+  this.highlight(this.sel.selectAll(`#l${text_label_id}`).selectAll('text'))
 }
 
 function highlight (sel) {
@@ -2262,11 +2251,11 @@ function highlight (sel) {
 // -------------------------------------------------------------------------
 
 function full_screen_event () {
-  if      (document.fullscreenEnabled)       return 'fullscreenchange'
-  else if (document.mozFullScreenEnabled)    return 'mozfullscreenchange'
-  else if (document.webkitFullscreenEnabled) return 'webkitfullscreenchange'
-  else if (document.msFullscreenEnabled)     return 'MSFullscreenChange'
-  else                                       return null
+  return document.fullscreenEnabled ? 'fullscreenchange'
+    : document.mozFullScreenEnabled ? 'mozfullscreenchange'
+    : document.webkitFullscreenEnabled ? 'webkitfullscreenchange'
+    : document.msFullscreenEnabled ? 'MSFullscreenChange'
+    : null
 }
 
 /**
@@ -2300,19 +2289,31 @@ function full_screen () {
     // apply full heigh/width 100%
     sel.classed('full-screen-on', false)
     // exit
-    if      (d.exitFullscreen)       d.exitFullscreen()
-    else if (d.mozCancelFullScreen)  d.mozCancelFullScreen()
-    else if (d.webkitExitFullscreen) d.webkitExitFullscreen()
-    else if (d.msExitFullscreen)     d.msExitFullscreen()
-    else throw Error('Cannot exit full screen')
+    if (d.exitFullscreen) {
+      d.exitFullscreen()
+    } else if (d.mozCancelFullScreen) {
+      d.mozCancelFullScreen()
+    } else if (d.webkitExitFullscreen) {
+      d.webkitExitFullscreen()
+    } else if (d.msExitFullscreen) {
+      d.msExitFullscreen()
+    } else {
+      throw Error('Cannot exit full screen')
+    }
   } else {
     sel.classed('full-screen-on', true)
     // enter
-    if      (e.requestFullscreen)       e.requestFullscreen()
-    else if (e.mozRequestFullScreen)    e.mozRequestFullScreen()
-    else if (e.webkitRequestFullscreen) e.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT)
-    else if (e.msRequestFullscreen)     e.msRequestFullscreen()
-    else throw Error('Full screen does not seem to be supported on this system.')
+    if (e.requestFullscreen) {
+      e.requestFullscreen()
+    } else if (e.mozRequestFullScreen) {
+      e.mozRequestFullScreen()
+    } else if (e.webkitRequestFullscreen) {
+      e.webkitRequestFullscreen(e.ALLOW_KEYBOARD_INPUT)
+    } else if (e.msRequestFullscreen) {
+      e.msRequestFullscreen()
+    } else {
+      throw Error('Full screen does not seem to be supported on this system.')
+    }
   }
 }
 
@@ -2340,7 +2341,7 @@ function map_for_export () {
   for (var r_id in out[1].reactions) {
     var reaction = out[1].reactions[r_id]
     var new_reaction = {}
-    var attrs = [ 'name', 'bigg_id','reversibility', 'label_x', 'label_y',
+    const attrs = [ 'name', 'bigg_id', 'reversibility', 'label_x', 'label_y',
                   'gene_reaction_rule', 'genes', 'metabolites' ]
     attrs.forEach(function(attr) {
       new_reaction[attr] = reaction[attr]
@@ -2349,8 +2350,8 @@ function map_for_export () {
     for (var s_id in reaction.segments) {
       var segment = reaction.segments[s_id]
       var new_segment = {}
-      var attrs = [ 'from_node_id', 'to_node_id', 'b1', 'b2' ]
-      attrs.forEach(function(attr) {
+      const segment_attrs = [ 'from_node_id', 'to_node_id', 'b1', 'b2' ]
+      segment_attrs.forEach(function(attr) {
         new_segment[attr] = segment[attr]
       })
       new_reaction['segments'][s_id] = new_segment
@@ -2360,7 +2361,7 @@ function map_for_export () {
   for (var n_id in out[1].nodes) {
     var node = out[1].nodes[n_id]
     var new_node = {}
-    var attrs
+    let attrs
     if (node.node_type === 'metabolite') {
       attrs = ['node_type', 'x', 'y', 'bigg_id', 'name', 'label_x', 'label_y',
                'node_is_primary']
@@ -2384,8 +2385,8 @@ function map_for_export () {
   // canvas
   var canvas_el = out[1].canvas
   var new_canvas_el = {}
-  var attrs = [ 'x', 'y', 'width', 'height' ]
-  attrs.forEach(function(attr) {
+  const canvas_attrs = [ 'x', 'y', 'width', 'height' ]
+  canvas_attrs.forEach(function(attr) {
     new_canvas_el[attr] = canvas_el[attr]
   })
   out[1].canvas = new_canvas_el
@@ -2410,7 +2411,7 @@ function save_map (obj, callback_before, callback_after, map_type) {
     transform: obj.canvas.mouse_node.attr('transform')
   }
 
-  obj.zoom_container._go_to_svg(1.0, { x: -canvas_size_and_loc.x, y: -canvas_size_and_loc.y }, function() {
+  obj.zoom_container._go_to_svg(1.0, { x: -canvas_size_and_loc.x, y: -canvas_size_and_loc.y }, () => {
     obj.svg.attr('width', canvas_size_and_loc.width)
     obj.svg.attr('height', canvas_size_and_loc.height)
     obj.canvas.mouse_node.attr('width', '0px')
@@ -2422,14 +2423,14 @@ function save_map (obj, callback_before, callback_after, map_type) {
       .style('visibility', 'hidden')
 
     // do the export
-    if(map_type == 'svg') {
+    if (map_type === 'svg') {
       utils.download_svg('saved_map', obj.svg, true)
-    } else if(map_type == 'png') {
+    } else if (map_type === 'png') {
       utils.download_png('saved_map', obj.svg, true)
     }
 
     // revert everything
-    obj.zoom_container._go_to_svg(window_scale, window_translate, function() {
+    obj.zoom_container._go_to_svg(window_scale, window_translate, () => {
       obj.svg.attr('width', null)
       obj.svg.attr('height', null)
       obj.canvas.mouse_node.attr('width', mouse_node_size_and_trans.w)
@@ -2440,8 +2441,8 @@ function save_map (obj, callback_before, callback_after, map_type) {
 
       // run the after callback
       obj.callback_manager.run(callback_after)
-    }.bind(obj))
-  }.bind(obj))
+    })
+  })
 }
 
 function save_svg () {
@@ -2480,34 +2481,36 @@ function convert_map () {
     // find in cobra model
     for (var model_reaction_id in model.reactions) {
       var model_reaction = model.reactions[model_reaction_id]
-      if (model_reaction.bigg_id == reaction.bigg_id) {
+      if (model_reaction.bigg_id === reaction.bigg_id) {
         reaction_attrs.forEach(function(attr) {
           reaction[attr] = model_reaction[attr]
         })
         found = true
       }
     }
-    if (!found)
+    if (!found) {
       reactions_not_found[reaction_id] = true
+    }
   }
   // convert metabolites
   for (var node_id in this.nodes) {
     var node = this.nodes[node_id]
     // only look at metabolites
-    if (node.node_type != 'metabolite') continue
+    if (node.node_type !== 'metabolite') continue
     found = false
     // find in cobra model
     for (var model_metabolite_id in model.metabolites) {
       var model_metabolite = model.metabolites[model_metabolite_id]
-      if (model_metabolite.bigg_id == node.bigg_id) {
+      if (model_metabolite.bigg_id === node.bigg_id) {
         metabolite_attrs.forEach(function(attr) {
           node[attr] = model_metabolite[attr]
         })
         found = true
       }
     }
-    if (!found)
+    if (!found) {
       met_nodes_not_found[node_id] = true
+    }
   }
 
   // status

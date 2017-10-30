@@ -53,6 +53,15 @@ export class BiggIndex {
     }
   }
 
+  getAll(bigg_id) {
+    const bucket = this.index.get(bigg_id)
+    return bucket ? [...bucket.values()] : []
+  }
+
+  keys() {
+    return [...this.index.keys()]
+  }
+
   /**
    * returns one item with the passed bigg_id, and returns it with the
    * corresponding escherId. If there's no match, `undefined` is returned.

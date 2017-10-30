@@ -66,7 +66,9 @@ module.exports = {
   d3_transform_catch: d3_transform_catch,
   check_browser: check_browser,
   calculate_fva_opacity: calculate_fva_opacity,
-  partition: partition
+  partition: partition,
+  flatMap: flatMap,
+  findMap: findMap
 }
 
 /**
@@ -892,7 +894,7 @@ function check_undefined(args, names) {
 }
 
 function compartmentalize(bigg_id, compartment_id) {
-  return bigg_id + '_' + compartment_id
+  return `${bigg_id}_${compartment_id}`
 }
 
 /**
@@ -900,8 +902,7 @@ function compartmentalize(bigg_id, compartment_id) {
  * length 1 or 2. Return [ id, null ] if no match is found.
  */
 function decompartmentalize(id) {
-  var reg = /(.*)_([a-z0-9]{1,2})$/;
-  var result = reg.exec(id)
+  const result = /(.*)_([a-z0-9]{1,2})$/.exec(id)
   return result !== null ? result.slice(1, 3) : [id, null]
 }
 
@@ -928,19 +929,19 @@ function quartiles(array) {
     return [
       array[0],
       array[0],
-      array[0],
+      array[0]
     ]
   } else if (array.length % 2 === 1) {
     return [
       median(array.slice(0, half)),
       array[half],
-      median(array.slice(half + 1)),
+      median(array.slice(half + 1))
     ]
   } else {
     return [
       median(array.slice(0, half)),
       (array[half - 1] + array[half]) / 2.0,
-      median(array.slice(half)),
+      median(array.slice(half))
     ]
   }
 }
@@ -1166,4 +1167,13 @@ function partition(array, criteria) {
     return [truthyArray, falsyArray]
   },
   [[], []])
+}
+
+function flatMap(array, func) {
+  return array.reduce((accumulator, next) => accumulator.concat(func(next)), [])
+}
+
+// returns the first element 
+function findMap(array, pred) {
+  return array.reduce((accumulator, next) => (accumulator || pred(next)), null)
 }
