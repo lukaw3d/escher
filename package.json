@@ -1,7 +1,7 @@
 {
   "name": "@dd-decaf/escher",
   "author": "orignal: Zachary King; forked by the DD-DeCaf team.",
-  "version": "1.6.16",
+  "version": "1.6.17",
   "schema_version": "1-0-0",
   "map_model_version": "5",
   "description": "Escher: A Web Application for Building, Sharing, and Embedding Data-Rich Visualizations of Biological Pathways",
