@@ -292,11 +292,7 @@ function go_to (scale, translate) {
  * @param {Object} translate - The location, of the form { x: 2.0, y: 3.0 }
  */
 function _go_to_callback (scale, translate) {
-  // if the scale changes, run the zoomChange callback
-  if (this.window_scale !== scale) {
-    this.window_scale = scale
-    this.callback_manager.run('zoomChange')
-  }
+  this.window_scale = scale
   this.window_translate = translate
 
   var use_3d_transform = this._use_3d_transform

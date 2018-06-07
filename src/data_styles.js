@@ -349,7 +349,7 @@ function genes_for_gene_reaction_rule(rule) {
     .split(' ')
     .filter(function(x) { return x != ''; })
   // unique strings
-  return utils.unique_strings_array(genes)
+  return [...new Set(genes)]
 }
 
 function evaluate_gene_reaction_rule(rule, gene_values, and_method_in_gene_reaction_rule) {

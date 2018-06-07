@@ -9,7 +9,6 @@ import MenuButton from './MenuButton'
  * edit mode is chosen. This can be changed once Builder is ported to Preact.
  */
 class BuilderMenuBar extends Component {
-
   componentDidMount () {
     this.props.sel.selectAll('#canvas').on(
       'touchend', () => this.setState({visible: false})

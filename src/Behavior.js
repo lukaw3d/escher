@@ -42,6 +42,7 @@ Behavior.prototype = {
   toggle_object_mouseover: toggle_object_mouseover,
   toggle_object_touch: toggle_object_touch,
   toggle_bezier_drag: toggle_bezier_drag,
+  toggle_reaction_hover: toggle_reaction_hover,
   // util
   turn_off_drag: turn_off_drag,
   // get drag behaviors
@@ -77,6 +78,9 @@ function init (map, undo_stack) {
   this.label_mousedown = null
   this.label_mouseover = null
   this.label_mouseout = null
+  this.reaction_mousedown = null
+  this.reaction_mouseover = null
+  this.reaction_mouseout = null
   this.label_touch = null
   this.object_mouseover = null
   this.object_touch = null
@@ -101,7 +105,33 @@ function turn_everything_on () {
   this.toggle_label_touch(true)
   this.toggle_object_mouseover(true)
   this.toggle_object_touch(true)
+  this.toggle_reaction_hover(true)
 }
+
+
+/**
+ * Listen for mouse events on reactions.
+ */
+function toggle_reaction_hover(on_off) {
+      if (on_off) {
+          var no_data_size = this.map.settings.get_option('reaction_no_data_size');
+          var scale = this.map.scale;
+          var map = this.map;
+          var dragging = this.dragging;
+          this.reaction_mouseover = function(d) {
+              if (!dragging) {
+                map.callback_manager.run('show_tooltip', null, 'reaction_label', d);
+              }
+          };
+  
+          this.reaction_mouseout = function(d) {
+              //map.callback_manager.run('delay_hide_tooltip');
+          };
+      } else {
+          this.reaction_mouseout = null;
+          this.reaction_mouseover = null;
+      }
+   }
 
 /**
  * Toggle everything except rotation mode and text mode.
@@ -114,6 +144,7 @@ function turn_everything_off () {
   this.toggle_label_touch(false)
   this.toggle_object_mouseover(false)
   this.toggle_object_touch(false)
+  this.toggle_reaction_hover(false)
 }
 
 /**
@@ -403,10 +434,6 @@ function toggle_label_mouseover (on_off) {
       if (!this.dragging) {
         this.map.callback_manager.run('show_tooltip', null, type, d)
       }
-    }.bind(this)
-
-    this.label_mouseout = function () {
-      this.map.callback_manager.run('delay_hide_tooltip')
     }.bind(this)
 
   } else {

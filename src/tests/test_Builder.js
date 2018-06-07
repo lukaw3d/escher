@@ -4,15 +4,17 @@ const d3Body = require('./helpers/d3Body')
 
 // Should test for the broken function that use utils.draw_array/object
 
-const get_map = require('./helpers/get_map')
-const get_model = require('./helpers/get_model')
+const get_map = require('./helpers/get_map').get_map
+const get_small_map = require('./helpers/get_map').get_small_map
+const get_model = require('./helpers/get_model').get_model
+const get_small_model = require('./helpers/get_model').get_small_model
 
 const describe = require('mocha').describe
 const it = require('mocha').it
-const mocha = require('mocha')
 const assert = require('assert')
+const sinon = require('sinon')
 
-function make_parent_sel (s) {
+function make_parent_sel(s) {
   var element = s.append('div');
   const width = 100;
   const height = 100;
@@ -31,9 +33,10 @@ function make_parent_sel (s) {
 }
 
 describe('Builder', () => {
-  it('Small map, no model. Async tests.', (done) => {
+  it('Small map, no model. Multiple instances.', function () {
+    this.slow(10000)
     const sel = make_parent_sel(d3Body)
-    const b = Builder(get_map(), null, '', sel, {
+    Builder(get_map(), null, '', sel, {
       never_ask_before_quit: true,
       first_load_callback: () => {
         assert.strictEqual(sel.select('svg').node(), b.map.svg.node())
@@ -61,7 +64,7 @@ describe('Builder', () => {
 
   it('check for model+highlight_missing bug', () => {
     Builder(get_map(), get_model(), '', make_parent_sel(d3Body),
-            { never_ask_before_quit: true, highlight_missing: true })
+      { never_ask_before_quit: true, highlight_missing: true })
   })
 
   it('SVG selection error', () => {
@@ -77,15 +80,23 @@ describe('Builder', () => {
    * passing scales to Builder.
    */
   it('does not modify user scales', () => {
-    const reactionScale = [{ type: 'median', color: '#9696ff', size: 8 }]
-    const metaboliteScale = [{ type: 'median', color: '#9696ff', size: 8 }]
+    const reactionScale = [
+      { type: 'median', color: '#9696ff', size: 8 },
+      { type: 'min', color: '#ffffff', size: 10 },
+      { type: 'max', color: '#ffffff', size: 10 }
+    ]
+    const metaboliteScale = [
+      { type: 'median', color: 'red', size: 0 },
+      { type: 'min', color: 'red', size: 0 },
+      { type: 'max', color: 'red', size: 0 }
+    ]
     const b = Builder(
       null,
       null,
       '',
       make_parent_sel(d3Body),
       // copy to make sure Builder does not just mutate original
-      { reaction_scale: {...reactionScale}, metabolite_scale: {...metaboliteScale} }
+      { reaction_scale: { ...reactionScale }, metabolite_scale: { ...metaboliteScale } }
     )
     assert.deepEqual(b.options.reaction_scale, reactionScale)
   })
@@ -101,8 +112,8 @@ describe('Builder', () => {
     const b = Builder(null, null, '', make_parent_sel(d3Body), {})
 
     // copy to make sure Builder does not just mutate original
-    b.settings.set_conditional('metabolite_scale', {...metaboliteScale})
-    b.settings.set_conditional('reaction_scale', {...reactionScale})
+    b.settings.set_conditional('metabolite_scale', { ...metaboliteScale })
+    b.settings.set_conditional('reaction_scale', { ...reactionScale })
 
     assert.deepEqual(b.options.metabolite_scale, metaboliteScale)
     assert.deepEqual(b.options.reaction_scale, reactionScale)
