@@ -113,30 +113,23 @@ function turn_everything_on () {
  * Listen for mouse events on reactions.
  */
 function toggle_reaction_hover(on_off) {
-      if (on_off) {
-          var no_data_size = this.map.settings.get_option('reaction_no_data_size');
-          var scale = this.map.scale;
-          var map = this.map;
-          var dragging = this.dragging;
-          this.reaction_mouseover = function(d) {
-              if (!dragging) {
-                map.callback_manager.run('show_tooltip', null, 'reaction_label', d);
-              }
-          };
-  
-          this.reaction_mouseout = function(d) {
-              //map.callback_manager.run('delay_hide_tooltip');
-          };
-      } else {
-          this.reaction_mouseout = null;
-          this.reaction_mouseover = null;
+  if (on_off) {
+    this.reaction_mouseover = function (d) {
+      if (!this.dragging) {
+        this.map.callback_manager.run('show_tooltip', null, 'reaction_label', d);
       }
-   }
+    };
+
+  } else {
+    this.reaction_mouseout = null;
+    this.reaction_mouseover = null;
+  }
+}
 
 /**
  * Toggle everything except rotation mode and text mode.
  */
-function turn_everything_off () {
+function turn_everything_off() {
   this.toggle_selectable_click(false)
   this.toggle_selectable_drag(false)
   this.toggle_label_drag(false)
