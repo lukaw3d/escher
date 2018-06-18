@@ -9,10 +9,10 @@ var utils = require('./utils');
 
 var SearchIndex = utils.make_class();
 SearchIndex.prototype = {
-    init,
-    insert,
-    remove,
-    find
+    init: init,
+    insert: insert,
+    remove: remove,
+    find: find
 };
 module.exports = SearchIndex;
 

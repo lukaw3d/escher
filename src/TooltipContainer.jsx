@@ -9,14 +9,12 @@ import _ from 'underscore'
 import * as utils from './utils'
 const PlacedDiv = require('./PlacedDiv')
 
-
 /**
  * Manage the tooltip that lives in a PlacedDiv.
  * @param selection
  * @param map
  * @param tooltipComponent
  * @param zoom_container
- * 
  */
 var TooltipContainer = utils.make_class()
 // instance methods
@@ -35,7 +33,7 @@ TooltipContainer.prototype = {
 module.exports = TooltipContainer
 
 // definitions
-function init(selection, TooltipComponent, zoom_container) {
+function init (selection, TooltipComponent, zoom_container) {
   this.div = selection.append('div').attr('id', 'tooltip-container')
   this.TooltipComponent = TooltipComponent
   this.tooltipRef = null
@@ -69,12 +67,12 @@ function init(selection, TooltipComponent, zoom_container) {
  * Sets up the appropriate callbacks to show the input
  * @param {object} map - map object
  */
-function setup_map_callbacks(map) {
+function setup_map_callbacks (map) {
   this.map = map
   this.placed_div = PlacedDiv(this.div, map, undefined, false)
 
   //
-  map.callback_manager.set('show_tooltip.tooltip_container', (type, d) => {
+  map.callback_manager.set('show_tooltip.tooltip_container', function (type, d) {
     // Check if the current element is in the list of tooltips to display
     if (map.settings.get_option('enable_tooltips').indexOf(type
       .replace('reaction_', '')
@@ -82,7 +80,7 @@ function setup_map_callbacks(map) {
       .replace('gene_', '')) > -1) {
       this.show(type, d)
     }
-  })
+  }.bind(this))
 
   //
   map.callback_manager.set('hide_tooltip.tooltip_container', this.hide.bind(this))
@@ -106,7 +104,7 @@ function setup_map_callbacks(map) {
   })
 }
 
-function setup_zoom_callbacks(zoom_container) {
+function setup_zoom_callbacks (zoom_container) {
   zoom_container.callback_manager.set('zoom.tooltip_container', function () {
     if (this.is_visible()) {
       this.hide()
@@ -123,7 +121,7 @@ function setup_zoom_callbacks(zoom_container) {
  * Return visibility of tooltip container.
  * @return {Boolean} Whether tooltip is visible.
  */
-function is_visible() {
+function is_visible () {
   return this.placed_div.is_visible()
 }
 
@@ -132,7 +130,7 @@ function is_visible() {
  * @param {string} type - 'reaction_label', 'node_label', or 'gene_label'
  * @param {Object} d - D3 data for DOM element
  */
-function show(type, d) {
+function show (type, d) {
   // d is the new highlight. Reset the previous highlight if it'spresent and it's not the same as d
   if (this.currentHighlight && this.currentHighlight.reaction_id !== d.reaction_id) {
     this.setReactionSize(this.currentHighlight.reaction_id, this.reactionSize(this.currentHighlight.data))
@@ -143,16 +141,16 @@ function show(type, d) {
   // get rid of a lingering delayed hide
   this.cancelHideTooltip()
 
-  if (_.contains(['reaction_label', 'node_label', 'gene_label', 'reaction_object', 'node_object'], type)) {
+  if (_.contains([ 'reaction_label', 'node_label', 'gene_label', 'reaction_object', 'node_object' ], type)) {
     // Use a default height if the ref hasn't been connected yet
     const tooltipSize = (this.tooltipRef !== null && this.tooltipRef.getSize)
-      ? this.tooltipRef.getSize()
-      : { width: 270, height: 100 }
+    ? this.tooltipRef.getSize()
+    : { width: 270, height: 100 }
     this.currentTooltip = { type, id: d[type.replace('_label', '_id').replace('_object', '_id')] }
     const windowTranslate = this.zoom_container.window_translate
     const windowScale = this.zoom_container.window_scale
     const mapSize = this.map !== null ? this.map.get_size() : { width: 1000, height: 1000 }
-    const offset = { x: 0, y: 0 }
+    const offset = {x: 0, y: 0}
     const startPosX = (type.replace('reaction_', '').replace('node_', '').replace('gene_', '') === 'object')
       ? d.xPos
       : d.label_x
@@ -199,7 +197,7 @@ function show(type, d) {
 /**
  * Hide the input.
  */
-function hide() {
+function hide () {
   if (this.currentHighlight) {
     this.setReactionSize(this.currentHighlight.reaction_id, this.reactionSize(this.currentHighlight.data))
   }
@@ -226,13 +224,13 @@ function setReactionSize(id, size) {
  * Hide the input after a short delay, so that mousing onto the tooltip does not
  * cause it to hide.
  */
-function delay_hide() {
+function delay_hide () {
   this.delay_hide_timeout = setTimeout(function () {
     this.hide()
   }.bind(this), 100)
 }
 
-function cancelHideTooltip() {
+function cancelHideTooltip () {
   if (this.delay_hide_timeout !== null) {
     clearTimeout(this.delay_hide_timeout)
   }

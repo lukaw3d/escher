@@ -25,7 +25,7 @@
  * draw.callback_manager.run('update_node', draw, update_selection)
  * draw.callback_manager.run('create_text_label', draw, enter_selection)
  * draw.callback_manager.run('update_text_label', draw, update_selection)
- *draw.callback_manager.run('update_knockout_mark', draw, update_selection);
+ * draw.callback_manager.run('update_knockout_mark', draw, update_selection);
  */
 
 var utils = require('./utils')
@@ -145,6 +145,7 @@ function update_reaction (update_selection, scale, cobra_model, drawn_nodes,
                              function(sel) {
                                sel.remove()
                              })
+
     update_selection.on('mouseover', reaction_mouseover_fn);
     update_selection.on('mouseout', reaction_mouseout_fn);
   // run the callback

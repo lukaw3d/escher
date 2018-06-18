@@ -39,7 +39,7 @@ import './Builder.css'
 import builder_embed from '!!raw-loader!./Builder-embed.css'
 
 class Builder {
-  constructor(map_data, model_data, embedded_css, selection, options) {
+  constructor (map_data, model_data, embedded_css, selection, options) {
     // Defaults
     if (!selection) {
       selection = d3Select('body').append('div')
@@ -111,9 +111,9 @@ class Builder {
       reaction_fva_data: null,
       reaction_styles: ['color', 'size', 'text'],
       reaction_compare_style: 'log2_fold',
-      reaction_scale: [{ type: 'min', color: '#c8c8c8', size: 12 },
-      { type: 'median', color: '#9696ff', size: 20 },
-      { type: 'max', color: '#ff0000', size: 25 }],
+      reaction_scale: [ { type: 'min', color: '#c8c8c8', size: 12 },
+                        { type: 'median', color: '#9696ff', size: 20 },
+                        { type: 'max', color: '#ff0000', size: 25 } ],
       reaction_no_data_color: '#dcdcdc',
       reaction_no_data_size: 8,
       reaction_knockout: [],
@@ -125,9 +125,9 @@ class Builder {
       metabolite_data: null,
       metabolite_styles: ['color', 'size', 'text'],
       metabolite_compare_style: 'log2_fold',
-      metabolite_scale: [{ type: 'min', color: '#fffaf0', size: 20 },
-      { type: 'median', color: '#f1c470', size: 30 },
-      { type: 'max', color: '#800000', size: 40 }],
+      metabolite_scale: [ { type: 'min', color: '#fffaf0', size: 20 },
+                          { type: 'median', color: '#f1c470', size: 30 },
+                          { type: 'max', color: '#800000', size: 40 } ],
       metabolite_no_data_color: '#ffffff',
       metabolite_no_data_size: 10,
       // View and build options
@@ -143,18 +143,18 @@ class Builder {
       // Callbacks
       first_load_callback: null
     }, {
-        primary_metabolite_radius: true,
-        secondary_metabolite_radius: true,
-        marker_radius: true,
-        gene_font_size: true,
-        reaction_no_data_size: true,
-        metabolite_no_data_size: true
-      })
+      primary_metabolite_radius: true,
+      secondary_metabolite_radius: true,
+      marker_radius: true,
+      gene_font_size: true,
+      reaction_no_data_size: true,
+      metabolite_no_data_size: true
+    })
 
     // Check the location
     if (utils.check_for_parent_tag(this.selection, 'svg')) {
       throw new Error('Builder cannot be placed within an svg node ' +
-        'because UI elements are html-based.')
+                      'because UI elements are html-based.')
     }
 
     // Warn if scales are too short
@@ -206,9 +206,9 @@ class Builder {
 
     // Set up the zoom container
     this.zoom_container = new ZoomContainer(this.selection,
-      this.options.scroll_behavior,
-      this.options.use_3d_transform,
-      this.options.fill_screen)
+                                            this.options.scroll_behavior,
+                                            this.options.use_3d_transform,
+                                            this.options.fill_screen)
     // Zoom container status changes
     this.zoom_container.callback_manager.set('svg_start', function () {
       if (this.map) this.map.set_status('Drawing ...')
@@ -219,8 +219,8 @@ class Builder {
 
     // Set up the tooltip container
     this.tooltip_container = new TooltipContainer(this.selection,
-      this.options.tooltip_component,
-      this.zoom_container)
+                                                  this.options.tooltip_component,
+                                                  this.zoom_container)
 
     // Status in both modes
     this._create_status(this.selection)
@@ -230,8 +230,8 @@ class Builder {
 
     // Append the bars and menu divs to the document
     var s = this.selection
-      .append('div').attr('class', 'search-menu-container')
-      .append('div').attr('class', 'search-menu-container-inline')
+    .append('div').attr('class', 'search-menu-container')
+    .append('div').attr('class', 'search-menu-container-inline')
     this.menu_div = s.append('div')
     this.search_bar_div = s.append('div')
     this.button_div = this.selection.append('div')
@@ -262,7 +262,7 @@ class Builder {
       // menu closes, everything is drawn.
       this.settings.status_bus.onValue(x => {
         if (x === 'accept') {
-          this._update_data(true, true, ['reaction', 'metabolite'], false)
+          this._update_data(true, true, [ 'reaction', 'metabolite' ], false)
           if (this.zoom_container !== null) {
             const new_behavior = this.settings.get_option('scroll_behavior')
             this.zoom_container.set_scroll_behavior(new_behavior)
@@ -288,7 +288,7 @@ class Builder {
   /**
    * For documentation of this function, see docs/javascript_api.rst.
    */
-  load_model(model_data, should_update_data) {
+  load_model (model_data, should_update_data) {
     if (_.isUndefined(should_update_data)) {
       should_update_data = true
     }
@@ -316,7 +316,7 @@ class Builder {
   /**
    * For documentation of this function, see docs/javascript_api.rst
    */
-  load_map(map_data, should_update_data) {
+  load_map (map_data, should_update_data) {
     if (_.isUndefined(should_update_data)) {
       should_update_data = true
     }
@@ -339,23 +339,23 @@ class Builder {
     if (map_data !== null) {
       // import map
       this.map = Map.from_data(map_data,
-        svg,
-        this.embedded_css,
-        zoomed_sel,
-        this.zoom_container,
-        this.settings,
-        this.cobra_model,
-        this.options.enable_search)
+                               svg,
+                               this.embedded_css,
+                               zoomed_sel,
+                               this.zoom_container,
+                               this.settings,
+                               this.cobra_model,
+                               this.options.enable_search)
     } else {
       // new map
       this.map = new Map(svg,
-        this.embedded_css,
-        zoomed_sel,
-        this.zoom_container,
-        this.settings,
-        this.cobra_model,
-        this.options.canvas_size_and_loc,
-        this.options.enable_search)
+                         this.embedded_css,
+                         zoomed_sel,
+                         this.zoom_container,
+                         this.settings,
+                         this.cobra_model,
+                         this.options.canvas_size_and_loc,
+                         this.options.enable_search)
     }
 
     // Connect status bar
@@ -371,11 +371,11 @@ class Builder {
 
     // Set up the reaction input with complete.ly
     this.build_input = new BuildInput(this.selection, this.map,
-      this.zoom_container, this.settings)
+                                      this.zoom_container, this.settings)
 
     // Set up the text edit input
     this.text_edit_input = new TextEditInput(this.selection, this.map,
-      this.zoom_container)
+                                            this.zoom_container)
 
     // Connect the tooltip
     this.tooltip_container.setup_map_callbacks(this.map)
@@ -396,12 +396,12 @@ class Builder {
         callbackManager={this.callback_manager}
         component={BuilderSettingsMenu}
         refProp={instance => { this.settingsMenuRef = instance }}
-        closeMenu={() => this.pass_settings_menu_props({ display: false })}
+        closeMenu={() => this.pass_settings_menu_props({display: false})}
       />,
       this.settings_div.node(),
       this.settings_div.node().children.length > 0
-        ? this.settings_div.node().firstChild
-        : undefined
+      ? this.settings_div.node().firstChild
+      : undefined
     )
 
     if (this.options.enable_search) {
@@ -449,7 +449,7 @@ class Builder {
     if (this.options.zoom_to_element) {
       const type = this.options.zoom_to_element.type
       const element_id = this.options.zoom_to_element.id
-      if (_.isUndefined(type) || ['reaction', 'node'].indexOf(type) === -1) {
+      if (_.isUndefined(type) || [ 'reaction', 'node' ].indexOf(type) === -1) {
         throw new Error('zoom_to_element type must be "reaction" or "node"')
       }
       if (_.isUndefined(element_id)) {
@@ -468,7 +468,7 @@ class Builder {
         var size = this.zoom_container.get_size()
         var start_coords = { x: size.width / 2, y: size.height / 4 }
         this.map.new_reaction_from_scratch(this.options.starting_reaction,
-          start_coords, 90)
+                                           start_coords, 90)
         this.map.zoom_extent_nodes()
       } else {
         this.map.zoom_extent_canvas()
@@ -491,7 +491,7 @@ class Builder {
     this.map.draw_everything()
   }
 
-  renderMenu(mode) {
+  renderMenu (mode) {
     const menuDivNode = this.menu_div.node()
     if (this.options.menu === 'all') {
       preact.render(
@@ -549,7 +549,7 @@ class Builder {
     }
   }
 
-  renderSearchBar(hide, searchItem) {
+  renderSearchBar (hide, searchItem) {
     if (!this.options.enable_search) { return }
     const searchBarNode = this.search_bar_div.node()
     preact.render(
@@ -567,7 +567,7 @@ class Builder {
     )
   }
 
-  renderButtonPanel(mode) {
+  renderButtonPanel (mode) {
     const buttonPanelDivNode = this.button_div.node()
     preact.render(
       <ButtonPanel
@@ -580,14 +580,14 @@ class Builder {
         mode={mode}
         buildInput={this.build_input}
       />,
-      buttonPanelDivNode,
-      buttonPanelDivNode.children.length > 0 // If there is already a div, re-render it. Otherwise make a new one
-        ? buttonPanelDivNode.firstChild
-        : undefined
+    buttonPanelDivNode,
+    buttonPanelDivNode.children.length > 0 // If there is already a div, re-render it. Otherwise make a new one
+      ? buttonPanelDivNode.firstChild
+      : undefined
     )
   }
 
-  _set_mode(mode) {
+  _set_mode (mode) {
     this.renderMenu(mode)
     this.renderButtonPanel(mode)
     // input
@@ -624,37 +624,37 @@ class Builder {
     this.map.draw_everything()
   }
 
-  view_mode() {
+  view_mode () {
     /** For documentation of this function, see docs/javascript_api.rst.  */
     this.callback_manager.run('view_mode')
     this._set_mode('view')
   }
 
-  build_mode() {
+  build_mode () {
     /** For documentation of this function, see docs/javascript_api.rst.  */
     this.callback_manager.run('build_mode')
     this._set_mode('build')
   }
 
-  brush_mode() {
+  brush_mode () {
     /** For documentation of this function, see docs/javascript_api.rst.  */
     this.callback_manager.run('brush_mode')
     this._set_mode('brush')
   }
 
-  zoom_mode() {
+  zoom_mode () {
     /** For documentation of this function, see docs/javascript_api.rst.  */
     this.callback_manager.run('zoom_mode')
     this._set_mode('zoom')
   }
 
-  rotate_mode() {
+  rotate_mode () {
     /** For documentation of this function, see docs/javascript_api.rst.  */
     this.callback_manager.run('rotate_mode')
     this._set_mode('rotate')
   }
 
-  text_mode() {
+  text_mode () {
     /** For documentation of this function, see docs/javascript_api.rst.  */
     this.callback_manager.run('text_mode')
     this._set_mode('text')
@@ -739,16 +739,16 @@ class Builder {
     this.map.set_status('')
   }
 
-  _reaction_check_add_abs() {
+  _reaction_check_add_abs () {
     const curr_style = this.options.reaction_styles
     const did_abs = false
     if (this.options.reaction_data !== null &&
-      !this.has_custom_reaction_styles &&
-      !_.contains(curr_style, 'abs')) {
+        !this.has_custom_reaction_styles &&
+        !_.contains(curr_style, 'abs')) {
       this.settings.set_conditional('reaction_styles', curr_style.concat('abs'))
       return function () {
         this.map.set_status('Visualizing absolute value of reaction data. ' +
-          'Change this option in Settings.', 5000)
+                            'Change this option in Settings.', 5000)
       }.bind(this)
     }
     return null
@@ -758,7 +758,7 @@ class Builder {
    * Function to get props for the tooltip component
    * @param {Object} props - Props that the tooltip will use
    */
-  pass_tooltip_component_props(props) {
+  pass_tooltip_component_props (props) {
     this.tooltip_container.callback_manager.run('setState', null, props)
   }
 
@@ -766,9 +766,9 @@ class Builder {
    * Function to get props for the settings menu
    * @param {Object} props - Props that the settings menu will use
    */
-  pass_settings_menu_props(props) {
+  pass_settings_menu_props (props) {
     // if (this.settings_menu.visible) { // <- pseudocode
-    // pass the props
+      // pass the props
     // }
     this.callback_manager.run('setState', null, props)
   }
@@ -776,7 +776,7 @@ class Builder {
   /**
    * For documentation of this function, see docs/javascript_api.rst.
    */
-  set_reaction_data(data) {
+  set_reaction_data (data) {
     this.options.reaction_data = data
     var message_fn = this._reaction_check_add_abs()
     if (message_fn !== null) {
@@ -797,7 +797,7 @@ class Builder {
   /**
    * For documentation of this function, see docs/javascript_api.rst.
    */
-  set_gene_data(data, clear_gene_reaction_rules) {
+  set_gene_data (data, clear_gene_reaction_rules) {
     if (clear_gene_reaction_rules) {
       // default undefined
       this.settings.set_conditional('show_gene_reaction_rules', false)
@@ -814,7 +814,7 @@ class Builder {
     }
   }
 
-  set_metabolite_data(data) {
+  set_metabolite_data (data) {
     /** For documentation of this function, see docs/javascript_api.rst.
 
      */
@@ -839,10 +839,10 @@ class Builder {
    * should_draw: (Optional, Default: true) Whether to redraw the update sections
    * of the map.
    */
-  _update_data(update_model, update_map, kind, should_draw) {
+  _update_data (update_model, update_map, kind, should_draw) {
     // defaults
     if (kind === undefined) {
-      kind = ['reaction', 'metabolite']
+      kind = [ 'reaction', 'metabolite' ]
     }
     if (should_draw === undefined) {
       should_draw = true
@@ -861,7 +861,7 @@ class Builder {
     // metabolite data
     if (update_metabolite_data && update_map && this.map !== null) {
       met_data_object = dataStyles.import_and_check(this.options.metabolite_data,
-        'metabolite_data')
+                                                     'metabolite_data')
       this.map.apply_metabolite_data_to_map(met_data_object)
       if (should_draw) {
         this.map.draw_all_nodes(false)
@@ -872,14 +872,14 @@ class Builder {
     if (update_reaction_data) {
       if (this.options.reaction_data !== null && update_map && this.map !== null) {
         reaction_data_object = dataStyles.import_and_check(this.options.reaction_data,
-          'reaction_data')
+                                                            'reaction_data')
         this.map.apply_reaction_data_to_map(reaction_data_object)
         if (should_draw) {
           this.map.draw_all_reactions(false, false)
         }
       } else if (this.options.gene_data !== null && update_map && this.map !== null) {
         gene_data_object = make_gene_data_object(this.options.gene_data,
-          this.cobra_model, this.map)
+                                                 this.cobra_model, this.map)
         this.map.apply_gene_data_to_map(gene_data_object)
         if (should_draw) {
           this.map.draw_all_reactions(false, false)
@@ -911,11 +911,11 @@ class Builder {
         // if we haven't already made this
         if (!met_data_object) {
           met_data_object = dataStyles.import_and_check(this.options.metabolite_data,
-            'metabolite_data')
+                                                         'metabolite_data')
         }
         this.cobra_model.apply_metabolite_data(met_data_object,
-          this.options.metabolite_styles,
-          this.options.metabolite_compare_style)
+                                               this.options.metabolite_styles,
+                                               this.options.metabolite_compare_style)
       }
 
       // reaction data
@@ -924,36 +924,36 @@ class Builder {
           // if we haven't already made this
           if (!reaction_data_object) {
             reaction_data_object = dataStyles.import_and_check(this.options.reaction_data,
-              'reaction_data')
+                                                                'reaction_data')
           }
           this.cobra_model.apply_reaction_data(reaction_data_object,
-            this.options.reaction_styles,
-            this.options.reaction_compare_style)
+                                               this.options.reaction_styles,
+                                               this.options.reaction_compare_style)
         } else if (this.options.gene_data !== null && update_model && this.cobra_model !== null) {
           if (!gene_data_object) {
             gene_data_object = make_gene_data_object(this.options.gene_data,
-              this.cobra_model, this.map)
+                                                     this.cobra_model, this.map)
           }
           this.cobra_model.apply_gene_data(gene_data_object,
-            this.options.reaction_styles,
-            this.options.identifiers_on_map,
-            this.options.reaction_compare_style,
-            this.options.and_method_in_gene_reaction_rule)
+                                           this.options.reaction_styles,
+                                           this.options.identifiers_on_map,
+                                           this.options.reaction_compare_style,
+                                           this.options.and_method_in_gene_reaction_rule)
         } else if (update_model && this.cobra_model !== null) {
           // clear the data
           this.cobra_model.apply_reaction_data(null,
-            this.options.reaction_styles,
-            this.options.reaction_compare_style)
+                                               this.options.reaction_styles,
+                                               this.options.reaction_compare_style)
         }
       }
 
       // callback
       this.callback_manager.run('update_data', null, update_model, update_map,
-        kind, should_draw)
+                                kind, should_draw)
     }.bind(this), delay)
 
     // definitions
-    function make_gene_data_object(gene_data, cobra_model, map) {
+    function make_gene_data_object (gene_data, cobra_model, map) {
       var all_reactions = {}
       if (cobra_model !== null) {
         utils.extend(all_reactions, cobra_model.reactions)
@@ -968,20 +968,20 @@ class Builder {
     }
   }
 
-  _create_status(selection) {
+  _create_status (selection) {
     this.status_bar = selection.append('div').attr('id', 'status')
   }
 
-  _setup_status(map) {
+  _setup_status (map) {
     map.callback_manager.set('set_status', status => this.status_bar.html(status))
   }
 
-  _setup_quick_jump(selection) {
+  _setup_quick_jump (selection) {
     // function to load a map
     var load_fn = function (new_map_name, quick_jump_path, callback) {
       if (this.options.enable_editing && !this.options.never_ask_before_quit) {
         if (!(confirm(('You will lose any unsaved changes.\n\n' +
-          'Are you sure you want to switch maps?')))) {
+                       'Are you sure you want to switch maps?')))) {
           if (callback) callback(false)
           return
         }
@@ -1008,7 +1008,7 @@ class Builder {
     this.quick_jump = QuickJump(selection, load_fn)
   }
 
-  _setup_modes(map, brush, zoom_container) {
+  _setup_modes (map, brush, zoom_container) {
     // set up zoom+pan and brush modes
     var was_enabled = {}
     map.callback_manager.set('start_rotation', function () {
@@ -1036,8 +1036,8 @@ class Builder {
   /**
    * Define keyboard shortcuts
    */
-  _get_keys(map, zoom_container, search_bar, settings_bar,
-    enable_editing, full_screen_button) {
+  _get_keys (map, zoom_container, search_bar, settings_bar,
+                      enable_editing, full_screen_button) {
     var keys = {
       save: {
         //key: 'ctrl+s',
@@ -1343,7 +1343,7 @@ class Builder {
   /**
    * Ask if the user wants to exit the page (to avoid unplanned refresh).
    */
-  _setup_confirm_before_exit() {
+  _setup_confirm_before_exit () {
     window.onbeforeunload = function (e) {
       // If we haven't been passed the event get the window.event
       e = e || window.event

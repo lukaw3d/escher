@@ -6,49 +6,48 @@ var it = require('mocha').it;
 var beforeEach = require('mocha').beforeEach;
 var assert = require('chai').assert;
 
-
 var d3Body = require('./helpers/d3Body');
 
 function assert_selectable_click_attrs_on(behavior) {
-  assert.isFunction(behavior.selectable_mousedown);
-  assert.isFunction(behavior.selectable_click);
-  assert.isFunction(behavior.node_mouseover);
-  assert.isFunction(behavior.node_mouseout);
+    assert.isFunction(behavior.selectable_mousedown);
+    assert.isFunction(behavior.selectable_click);
+    assert.isFunction(behavior.node_mouseover);
+    assert.isFunction(behavior.node_mouseout);
 }
 
 function assert_selectable_click_attrs_off(behavior) {
-  assert.strictEqual(behavior.selectable_mousedown, null);
-  assert.strictEqual(behavior.selectable_click, null);
-  assert.strictEqual(behavior.node_mouseover, null);
-  assert.strictEqual(behavior.node_mouseout, null);
+    assert.strictEqual(behavior.selectable_mousedown, null);
+    assert.strictEqual(behavior.selectable_click, null);
+    assert.strictEqual(behavior.node_mouseover, null);
+    assert.strictEqual(behavior.node_mouseout, null);
 }
 
 function assert_selectable_drag_attrs_on(behavior) {
-  assert.notStrictEqual(behavior.selectable_drag, behavior.empty_behavior);
-  assert.notStrictEqual(behavior.bezier_drag, behavior.empty_behavior);
+    assert.notStrictEqual(behavior.selectable_drag, behavior.empty_behavior);
+    assert.notStrictEqual(behavior.bezier_drag, behavior.empty_behavior);
 }
 
 function assert_selectable_drag_attrs_off(behavior) {
-  assert.strictEqual(behavior.selectable_drag, behavior.empty_behavior);
-  assert.strictEqual(behavior.bezier_drag, behavior.empty_behavior);
+    assert.strictEqual(behavior.selectable_drag, behavior.empty_behavior);
+    assert.strictEqual(behavior.bezier_drag, behavior.empty_behavior);
 }
 
 
 function assert_label_drag_attrs_on(behavior) {
-  assert.notStrictEqual(behavior.reaction_label_drag, behavior.empty_behavior);
-  assert.notStrictEqual(behavior.node_label_drag, behavior.empty_behavior);
+    assert.notStrictEqual(behavior.reaction_label_drag, behavior.empty_behavior);
+    assert.notStrictEqual(behavior.node_label_drag, behavior.empty_behavior);
 }
 
 function assert_label_drag_attrs_off(behavior) {
-  assert.strictEqual(behavior.reaction_label_drag, behavior.empty_behavior);
-  assert.strictEqual(behavior.node_label_drag, behavior.empty_behavior);
+    assert.strictEqual(behavior.reaction_label_drag, behavior.empty_behavior);
+    assert.strictEqual(behavior.node_label_drag, behavior.empty_behavior);
 }
 
-function assert_label_mouseover_attrs_on(behavior) {
+function assert_label_mouseover_attrs_on (behavior) {
   assert.isFunction(behavior.label_mouseover)
 }
 
-function assert_label_mouseover_attrs_off(behavior) {
+function assert_label_mouseover_attrs_off (behavior) {
   assert.isNull(behavior.label_mouseover)
 }
 

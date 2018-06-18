@@ -14,7 +14,7 @@ const it = require('mocha').it
 const assert = require('assert')
 const sinon = require('sinon')
 
-function make_parent_sel(s) {
+function make_parent_sel (s) {
   var element = s.append('div');
   const width = 100;
   const height = 100;
@@ -33,7 +33,7 @@ function make_parent_sel(s) {
 }
 
 describe('Builder', () => {
-  it('Small map, no model. Multiple instances.', function () {
+  it('Small map, no model. Multiple instances.', (done) => {
     this.slow(10000)
     const sel = make_parent_sel(d3Body)
     Builder(get_map(), null, '', sel, {
@@ -64,7 +64,7 @@ describe('Builder', () => {
 
   it('check for model+highlight_missing bug', () => {
     Builder(get_map(), get_model(), '', make_parent_sel(d3Body),
-      { never_ask_before_quit: true, highlight_missing: true })
+            { never_ask_before_quit: true, highlight_missing: true })
   })
 
   it('SVG selection error', () => {
@@ -96,7 +96,7 @@ describe('Builder', () => {
       '',
       make_parent_sel(d3Body),
       // copy to make sure Builder does not just mutate original
-      { reaction_scale: { ...reactionScale }, metabolite_scale: { ...metaboliteScale } }
+      { reaction_scale: {...reactionScale}, metabolite_scale: {...metaboliteScale} }
     )
     assert.deepEqual(b.options.reaction_scale, reactionScale)
   })
@@ -112,8 +112,8 @@ describe('Builder', () => {
     const b = Builder(null, null, '', make_parent_sel(d3Body), {})
 
     // copy to make sure Builder does not just mutate original
-    b.settings.set_conditional('metabolite_scale', { ...metaboliteScale })
-    b.settings.set_conditional('reaction_scale', { ...reactionScale })
+    b.settings.set_conditional('metabolite_scale', {...metaboliteScale})
+    b.settings.set_conditional('reaction_scale', {...reactionScale})
 
     assert.deepEqual(b.options.metabolite_scale, metaboliteScale)
     assert.deepEqual(b.options.reaction_scale, reactionScale)

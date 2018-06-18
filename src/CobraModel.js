@@ -77,7 +77,6 @@ function from_cobra_json (model_data) {
     the_id = r.id
     genes[the_id] = r
   }
-  console.log("GEEEEEEENEEEEEEES DIC", genes)
 
   var model = new CobraModel()
 
@@ -105,7 +104,6 @@ function from_cobra_json (model_data) {
 
     if ('gene_reaction_rule' in reaction) {
       var gene_ids = data_styles.genes_for_gene_reaction_rule(reaction.gene_reaction_rule)
-      console.log("GENESSSSSSSSSSSSSSSSSSSSSSSSSSSSSS", genes)
       gene_ids.forEach(function(gene_id) {
         if (gene_id in genes) {
           var gene = utils.clone(genes[gene_id])
@@ -114,7 +112,7 @@ function from_cobra_json (model_data) {
           delete gene.id
           reaction.genes.push(gene)
         } else {
-          console.warn('Could not find gene for gene_id ' + JSON.stringify(gene_id))
+          console.warn('Could not find gene for gene_id ' + gene_id)
         }
       })
     }

@@ -129,7 +129,7 @@ function toggle_reaction_hover(on_off) {
 /**
  * Toggle everything except rotation mode and text mode.
  */
-function turn_everything_off() {
+function turn_everything_off () {
   this.toggle_selectable_click(false)
   this.toggle_selectable_drag(false)
   this.toggle_label_drag(false)
