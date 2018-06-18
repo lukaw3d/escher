@@ -1,12 +1,13 @@
-const Behavior = require('../Behavior');
+var Behavior = require('../Behavior');
 const Settings = require('../Settings');
 
-const describe = require('mocha').describe;
-const it = require('mocha').it;
-const beforeEach = require('mocha').beforeEach;
-const assert = require('chai').assert;
+var describe = require('mocha').describe;
+var it = require('mocha').it;
+var beforeEach = require('mocha').beforeEach;
+var assert = require('chai').assert;
 
-const d3Body = require('./helpers/d3Body');
+
+var d3Body = require('./helpers/d3Body');
 
 function assert_selectable_click_attrs_on(behavior) {
   assert.isFunction(behavior.selectable_mousedown);
