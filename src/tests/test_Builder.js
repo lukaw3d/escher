@@ -34,9 +34,8 @@ function make_parent_sel (s) {
 
 describe('Builder', () => {
   it('Small map, no model. Multiple instances.', (done) => {
-    this.slow(10000)
     const sel = make_parent_sel(d3Body)
-    Builder(get_map(), null, '', sel, {
+    const b = Builder(get_map(), null, '', sel, {
       never_ask_before_quit: true,
       first_load_callback: () => {
         assert.strictEqual(sel.select('svg').node(), b.map.svg.node())
