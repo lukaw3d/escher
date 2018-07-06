@@ -22,6 +22,8 @@ import QuickJump from './QuickJump'
 import dataStyles from './data_styles'
 import TooltipContainer from './TooltipContainer'
 import DefaultTooltip from './DefaultTooltip'
+import Consts from './Consts'
+
 import _ from 'underscore'
 import { select as d3Select, selection as d3Selection } from 'd3-selection'
 import { json as d3Json } from 'd3-request'
@@ -68,7 +70,6 @@ class Builder {
     this.settingsMenuRef = null
     this.search_bar_div = null
     this.searchBarRef = null
-    this.semanticOptions = null
 
     // apply this object as data for the selection
     this.selection.datum(this)
@@ -91,7 +92,6 @@ class Builder {
       full_screen_button: false,
       ignore_bootstrap: false,
       disabled_buttons: null,
-      semantic_zoom: null,
       // map, model, and styles
       starting_reaction: null,
       never_ask_before_quit: false,
@@ -103,10 +103,12 @@ class Builder {
       hide_secondary_metabolites: false,
       show_gene_reaction_rules: false,
       hide_all_labels: false,
+      enable_fva_opacity: true,
       canvas_size_and_loc: null,
       // applied data
       // reaction
       reaction_data: null,
+      reaction_fva_data: null,
       reaction_styles: ['color', 'size', 'text'],
       reaction_compare_style: 'log2_fold',
       reaction_scale: [ { type: 'min', color: '#c8c8c8', size: 12 },
@@ -114,6 +116,8 @@ class Builder {
                         { type: 'max', color: '#ff0000', size: 25 } ],
       reaction_no_data_color: '#dcdcdc',
       reaction_no_data_size: 8,
+      reaction_knockout: [],
+      added_reactions: [],
       // gene
       gene_data: null,
       and_method_in_gene_reaction_rule: 'mean',
@@ -130,10 +134,7 @@ class Builder {
       identifiers_on_map: 'bigg_id',
       highlight_missing: false,
       allow_building_duplicate_reactions: false,
-      cofactors: [
-        'atp', 'adp', 'nad', 'nadh', 'nadp', 'nadph', 'gtp', 'gdp', 'h', 'coa',
-        'ump', 'h2o', 'ppi'
-      ],
+      cofactors: Consts.cofactors,
       // Extensions
       tooltip_component: DefaultTooltip,
       enable_tooltips: ['label', 'object'],
@@ -214,22 +215,6 @@ class Builder {
     }.bind(this))
     this.zoom_container.callback_manager.set('svg_finish', function () {
       if (this.map) this.map.set_status('')
-    }.bind(this))
-    this.zoom_container.callback_manager.set('zoomChange', function () {
-      if (this.options.semantic_zoom) {
-        const scale = this.zoom_container.window_scale
-        const optionObject = this.options.semantic_zoom
-        .sort((a, b) => a.zoomLevel - b.zoomLevel)
-        .find(a => a.zoomLevel > scale)
-        if (optionObject) {
-          Object.entries(optionObject.options).map(([option, value]) => {
-            if (this.options[option] !== value) {
-              this.settings.set_conditional(option, value)
-              this._update_data(false, true)
-            }
-          })
-        }
-      }
     }.bind(this))
 
     // Set up the tooltip container
@@ -334,19 +319,6 @@ class Builder {
   load_map (map_data, should_update_data) {
     if (_.isUndefined(should_update_data)) {
       should_update_data = true
-    }
-
-    // Store map options that might be changed by semantic_zoom function
-    const tempSemanticOptions = {}
-    if (this.options.semantic_zoom) {
-      for (let level of this.options.semantic_zoom) {
-        Object.keys(level.options).map(option => {
-          if (tempSemanticOptions[option] === undefined) {
-            tempSemanticOptions[option] = this.options[option]
-          }
-        })
-      }
-      this.semanticOptions = Object.assign({}, tempSemanticOptions)
     }
 
     // Begin with some definitions
@@ -528,16 +500,7 @@ class Builder {
           {...this.map}
           mode={mode}
           settings={this.settings}
-          saveMap={() => {
-            // Revert options changed by semanticZoom to their original values if option is active
-            if (this.semanticOptions) {
-              Object.entries(this.semanticOptions).map(([key, value]) => {
-                this.settings.set_conditional(key, value)
-              })
-              this._update_data()
-            }
-            this.map.save()
-          }}
+          saveMap={() => this.map.save()}
           loadMap={(file) => this.load_map(file)}
           saveSvg={() => this.map.save_svg()}
           savePng={() => this.map.save_png()}
@@ -695,6 +658,85 @@ class Builder {
     /** For documentation of this function, see docs/javascript_api.rst.  */
     this.callback_manager.run('text_mode')
     this._set_mode('text')
+  }
+
+  set_reaction_fva_data(data) {
+    if (this.options.enable_fva_opacity) {
+      this.options.reaction_fva_data = data
+      this.map.update_these_reactions_opacity(data)
+      this.map.set_status('')
+    }
+  }
+  /**
+   * set_added_reactions
+   * 
+   * Takes a list of reactions to be added. It checks if the reaction is already drawn, if yes
+   * then it keeps it (and its position).
+   * Removes reactions that are drawn previously but not provided in the list.
+   * If any reactions are newly added, it zooms to it.
+   * 
+   * @param ['bigg_id', 'bigg_id'] added_reactions 
+   */
+  set_added_reactions(added_reactions) {
+    this.options.added_reactions.forEach((reaction) => {
+      reaction.undo()
+    })
+
+    let newlyAdded = []
+    while (true) {
+      const newReaction = this.map.draw_one_added_reaction(
+        added_reactions,
+        newlyAdded.map(reaction => reaction.bigg_id)
+      )
+      if (newReaction) {
+        newlyAdded.push(newReaction)
+        added_reactions = added_reactions.filter((reaction) => reaction !== newReaction.bigg_id)
+      }
+      if (!newReaction || !added_reactions.length) {
+        break
+      }
+    }
+    const { x, y } = this.map.canvas.size_and_location()
+    added_reactions.forEach((reaction, i) => {
+      const coordinates = {
+        x: x + 250,
+        y: y + 100 + i * 400
+      }
+      const newReaction = this.map.new_reaction_from_scratch(
+        reaction,
+        coordinates,
+        90)
+      newlyAdded.push(newReaction)
+    })
+
+    this.options.added_reactions = newlyAdded
+    // @matyasfodor - not sure if this is required
+    this.map.set_status('')
+  }
+
+  set_knockout_reactions(knockout_reaction_ids) {
+    this.map.clear_these_knockouts(this.options.reaction_knockout)
+    this.map.draw_these_knockouts(knockout_reaction_ids)
+
+    this.options.reaction_knockout = knockout_reaction_ids
+    this.map.set_status('')
+  }
+
+  knockout_reaction(data) {
+    this.options.reaction_knockout.push(data)
+    this.map.draw_these_knockouts(this.options.reaction_knockout)
+    this.map.set_status('')
+  }
+
+  undo_knockout_reaction(data) {
+    this.options.reaction_knockout.remove(data)
+    this.map.clear_these_knockouts(this.options.reaction_knockout)
+    this.map.set_status('')
+  }
+
+  draw_knockout_reactions() {
+    this.map.draw_these_knockouts(this.options.reaction_knockout)
+    this.map.set_status('')
   }
 
   _reaction_check_add_abs () {
@@ -998,22 +1040,22 @@ class Builder {
                       enable_editing, full_screen_button) {
     var keys = {
       save: {
-        key: 'ctrl+s',
+        //key: 'ctrl+s',
         target: map,
         fn: map.save
       },
       save_svg: {
-        key: 'ctrl+shift+s',
+        //key: 'ctrl+shift+s',
         target: map,
         fn: map.save_svg
       },
       save_png: {
-        key: 'ctrl+shift+p',
+        //key: 'ctrl+shift+p',
         target: map,
         fn: map.save_png
       },
       load: {
-        key: 'ctrl+o',
+        //key: 'ctrl+o',
         fn: null // defined by button
       },
       convert_map: {
@@ -1025,7 +1067,7 @@ class Builder {
         fn: map.clear_map
       },
       load_model: {
-        key: 'ctrl+m',
+        //key: 'ctrl+m',
         fn: null // defined by button
       },
       clear_model: {
@@ -1047,45 +1089,45 @@ class Builder {
         fn: function () { this.set_gene_data(null, true) }
       },
       zoom_in_ctrl: {
-        key: 'ctrl+=',
+        //key: 'ctrl+=',
         target: zoom_container,
         fn: zoom_container.zoom_in
       },
       zoom_in: {
-        key: '=',
+        //key: '=',
         target: zoom_container,
         fn: zoom_container.zoom_in,
         ignore_with_input: true
       },
       zoom_out_ctrl: {
-        key: 'ctrl+-',
+        //key: 'ctrl+-',
         target: zoom_container,
         fn: zoom_container.zoom_out
       },
       zoom_out: {
-        key: '-',
+        //key: '-',
         target: zoom_container,
         fn: zoom_container.zoom_out,
         ignore_with_input: true
       },
       extent_nodes_ctrl: {
-        key: 'ctrl+0',
+        //key: 'ctrl+0',
         target: map,
         fn: map.zoom_extent_nodes
       },
       extent_nodes: {
-        key: '0',
+        //key: '0',
         target: map,
         fn: map.zoom_extent_nodes,
         ignore_with_input: true
       },
       extent_canvas_ctrl: {
-        key: 'ctrl+1',
+        //key: 'ctrl+1',
         target: map,
         fn: map.zoom_extent_canvas
       },
       extent_canvas: {
-        key: '1',
+        //key: '1',
         target: map,
         fn: map.zoom_extent_canvas,
         ignore_with_input: true
@@ -1095,7 +1137,7 @@ class Builder {
         fn: () => this.renderSearchBar()
       },
       search: {
-        key: 'f',
+        //key: 'f',
         fn: () => this.renderSearchBar(),
         ignore_with_input: true
       },
@@ -1105,7 +1147,7 @@ class Builder {
         ignore_with_input: true
       },
       show_settings_ctrl: {
-        key: 'ctrl+,',
+        //key: 'ctrl+,',
         target: settings_bar,
         fn: () => this.pass_settings_menu_props({
           ...this.options,
@@ -1115,7 +1157,7 @@ class Builder {
         })
       },
       show_settings: {
-        key: ',',
+        //key: ',',
         target: this,
         fn: () => this.pass_settings_menu_props({
           ...this.options,
@@ -1129,12 +1171,12 @@ class Builder {
     if (full_screen_button) {
       utils.extend(keys, {
         full_screen_ctrl: {
-          key: 'ctrl+2',
+          //key: 'ctrl+2',
           target: map,
           fn: map.full_screen
         },
         full_screen: {
-          key: '2',
+          //key: '2',
           target: map,
           fn: map.full_screen,
           ignore_with_input: true
@@ -1144,33 +1186,69 @@ class Builder {
     if (enable_editing) {
       utils.extend(keys, {
         build_mode: {
-          key: 'n',
+          //key: 'n',
           target: this,
           fn: this.build_mode,
           ignore_with_input: true
         },
         zoom_mode: {
-          key: 'z',
+          //key: 'z',
           target: this,
           fn: this.zoom_mode,
           ignore_with_input: true
         },
         brush_mode: {
-          key: 'v',
+          //key: 'v',
           target: this,
           fn: this.brush_mode,
           ignore_with_input: true
         },
         rotate_mode: {
-          key: 'r',
+          //key: 'r',
           target: this,
           fn: this.rotate_mode,
           ignore_with_input: true
         },
         text_mode: {
-          key: 't',
+          //key: 't',
           target: this,
           fn: this.text_mode,
+          ignore_with_input: true
+        },
+        set_added_reactions: {
+          key: 'set_added_reactions',
+          target: this,
+          fn: this.set_added_reactions,
+          ignore_with_input: true
+        },
+        set_knockout_reactions: {
+          key: 'set_knockout_reactions',
+          target: this,
+          fn: this.set_knockout_reactions,
+          ignore_with_input: true
+        },
+        knockout_reaction: {
+          key: 'knockout_reaction',
+          target: this,
+          fn: this.knockout_reaction,
+          ignore_with_input: true
+        },
+        undo_knockout_reaction: {
+          key: 'undo_knockout_reaction',
+          target: this,
+          fn: this.undo_knockout_reaction,
+          ignore_with_input: true
+        },
+        draw_knockout_reactions: {
+          key: 'draw_knockout_reactions',
+          target: this,
+          fn: this.undo_knockout_reaction,
+          ignore_with_input: true
+        },
+        set_reaction_fva_data: {
+          key: 'set_reaction_fva_data',
+          target: this,
+          fn: this.set_reaction_fva_data,
           ignore_with_input: true
         },
         toggle_beziers: {
@@ -1180,76 +1258,76 @@ class Builder {
           ignore_with_input: true
         },
         delete_ctrl: {
-          key: 'ctrl+backspace',
+          //key: 'ctrl+backspace',
           target: map,
           fn: map.delete_selected,
           ignore_with_input: true
         },
         delete: {
-          key: 'backspace',
+          //key: 'backspace',
           target: map,
           fn: map.delete_selected,
           ignore_with_input: true
         },
         delete_del: {
-          key: 'del',
+          //key: 'del',
           target: map,
           fn: map.delete_selected,
           ignore_with_input: true
         },
         toggle_primary: {
-          key: 'p',
+          //key: 'p',
           target: map,
           fn: map.toggle_selected_node_primary,
           ignore_with_input: true
         },
         cycle_primary: {
-          key: 'c',
+          //key: 'c',
           target: map,
           fn: map.cycle_primary_node,
           ignore_with_input: true
         },
         direction_arrow_right: {
-          key: 'right',
+         // key: 'right',
           target: this.build_input.direction_arrow,
           fn: this.build_input.direction_arrow.right,
           ignore_with_input: true
         },
         direction_arrow_down: {
-          key: 'down',
+          //key: 'down',
           target: this.build_input.direction_arrow,
           fn: this.build_input.direction_arrow.down,
           ignore_with_input: true
         },
         direction_arrow_left: {
-          key: 'left',
+          //key: 'left',
           target: this.build_input.direction_arrow,
           fn: this.build_input.direction_arrow.left,
           ignore_with_input: true
         },
         direction_arrow_up: {
-          key: 'up',
+          //key: 'up',
           target: this.build_input.direction_arrow,
           fn: this.build_input.direction_arrow.up,
           ignore_with_input: true
         },
         undo: {
-          key: 'ctrl+z',
+          //key: 'ctrl+z',
           target: map.undo_stack,
           fn: map.undo_stack.undo
         },
         redo: {
-          key: 'ctrl+shift+z',
+          //key: 'ctrl+shift+z',
           target: map.undo_stack,
           fn: map.undo_stack.redo
         },
         select_all: {
-          key: 'ctrl+a',
+          //key: 'ctrl+a',
           target: map,
           fn: map.select_all
         },
         select_none: {
-          key: 'ctrl+shift+a',
+          //key: 'ctrl+shift+a',
           target: map,
           fn: map.select_none
         },

@@ -1,5 +1,8 @@
 /** @jsx h */
 import preact, { h } from 'preact'
+import { mouse as d3_mouse } from 'd3-selection'
+import { select as d3_select } from 'd3-selection'
+
 import CallbackManager from './CallbackManager'
 import ReactWrapper from './ReactWrapper'
 import _ from 'underscore'
@@ -22,6 +25,8 @@ TooltipContainer.prototype = {
   is_visible: is_visible,
   show: show,
   hide: hide,
+  reactionSize: reactionSize,
+  setReactionSize: setReactionSize,
   delay_hide: delay_hide,
   cancelHideTooltip: cancelHideTooltip
 }
@@ -44,6 +49,7 @@ function init (selection, TooltipComponent, zoom_container) {
 
   this.map = null
   this.delay_hide_timeout = null
+  this.currentHighlight = null
   this.currentTooltip = null
 
   // keep a reference to preact tooltip
@@ -125,6 +131,13 @@ function is_visible () {
  * @param {Object} d - D3 data for DOM element
  */
 function show (type, d) {
+  // d is the new highlight. Reset the previous highlight if it'spresent and it's not the same as d
+  if (this.currentHighlight && this.currentHighlight.reaction_id !== d.reaction_id) {
+    this.setReactionSize(this.currentHighlight.reaction_id, this.reactionSize(this.currentHighlight.data))
+  }
+  // Set the new highlight
+  this.setReactionSize(d.reaction_id, this.reactionSize(d.data) * 2.1)
+  this.currentHighlight = d
   // get rid of a lingering delayed hide
   this.cancelHideTooltip()
 
@@ -165,7 +178,8 @@ function show (type, d) {
         offset.y = -(bottomEdge - mapSize.height + 47) / windowScale
       }
     }
-    const coords = { x: startPosX + offset.x, y: startPosY + 10 + offset.y }
+    const [mouseX, mouseY] = d3_mouse(this.map.sel.node())
+    const coords = { x: mouseX + 5, y: mouseY + 5 }
     this.placed_div.place(coords)
     const data = {
       biggId: d.bigg_id,
@@ -184,9 +198,27 @@ function show (type, d) {
  * Hide the input.
  */
 function hide () {
-  this.placed_div.hide()
-  this.currentTooltip = null
+  if (this.currentHighlight) {
+    this.setReactionSize(this.currentHighlight.reaction_id, this.reactionSize(this.currentHighlight.data))
+  }
+  this.placed_div.hide();
 }
+
+/**
+ * Get size for the reaction
+ */
+
+function reactionSize(data) {
+  return data ? this.map.scale.reaction_size(data) : this.map.settings.get_option('reaction_no_data_size');
+}
+
+function setReactionSize(id, size) {
+  d3_select(`#r${id}`)
+    .selectAll('.segment')
+    .transition()
+    .style('stroke-width', size)
+    .duration(100);
+ }
 
 /**
  * Hide the input after a short delay, so that mousing onto the tooltip does not
