@@ -55,11 +55,11 @@ export class BiggIndex {
 
   getAll(bigg_id) {
     const bucket = this.index.get(bigg_id)
-    return bucket ? [...bucket.values()] : []
+    return bucket ? Array.from(bucket.values()) : []
   }
 
   keys() {
-    return [...this.index.keys()]
+    return Array.from(this.index.keys());
   }
 
   /**
