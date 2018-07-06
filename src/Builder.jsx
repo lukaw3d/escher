@@ -118,6 +118,8 @@ class Builder {
       reaction_no_data_size: 8,
       reaction_knockout: [],
       added_reactions: [],
+      reactions_highlight: [],
+      reaction_opacity: {},
       // gene
       gene_data: null,
       and_method_in_gene_reaction_rule: 'mean',
@@ -280,9 +282,43 @@ class Builder {
 
       if (message_fn !== null) setTimeout(message_fn, 500)
 
+      // TODO @matyasfodor try to find a generic fnction for this.
+      this.options.reactions_highlight.forEach((reactionId) => {
+        this.map.bigg_index
+          .getAll(reactionId)
+          .forEach(({ reaction_id }) => {
+            this.selection.select(`#r${reaction_id}`)
+              .style('filter', 'url(#escher-glow-filter)')
+          })
+      })
+
+      Object.entries(this.options.reaction_opacity)
+        .map(([reactionBiggId, opacity]) => {
+          this.map.bigg_index
+            .getAll(reactionBiggId)
+            .forEach(({reaction_id}) => {
+              this.selection.select(`#r${reaction_id}`)
+                .style('opacity', opacity)
+            })
+        })
+
       // Finally run callback
       _.defer(() => this.callback_manager.run('first_load', this))
     })
+
+    if (!document.getElementById('escher-glow-filter')) {
+      const filterElement = utils.htmlToElement(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="position: absolute; top: -99999px">
+          <filter id="escher-glow-filter">
+              <feGaussianBlur stdDeviation="15" result="coloredBlur"/>
+              <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+          </filter>
+        </svg>`)
+      document.body.appendChild(filterElement)
+    }
   }
 
   /**
