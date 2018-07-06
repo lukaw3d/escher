@@ -2,6 +2,8 @@
 
 var vkbeautify = require('vkbeautify')
 var _ = require('underscore')
+const Consts = require('./Consts')
+
 var d3_json = require('d3-request').json
 var d3_text = require('d3-request').text
 var d3_csvParseRows = require('d3-dsv').csvParseRows
@@ -65,7 +67,12 @@ module.exports = {
   get_window: get_window,
   d3_transform_catch: d3_transform_catch,
   check_browser: check_browser,
+  calculate_fva_opacity: calculate_fva_opacity,
+  findMap: findMap,
+  isMetabolite: isMetabolite,
   htmlToElement: htmlToElement,
+  object_slice_for_bigg: object_slice_for_bigg,
+  get_central_nodes: get_central_nodes,
 }
 
 /**
@@ -1141,9 +1148,62 @@ function check_browser (name) {
   }
 }
 
+function calculate_fva_opacity(flux, lower, upper, small_value) {
+  var flux_positive = flux > 0 ? 1 : -1
+  flux += small_value * flux_positive
+
+  return Math.abs(flux) / (Math.abs(flux) + Math.abs(upper - lower));
+}
+
+// returns the first element
+function findMap(array, pred) {
+  return array.reduce((accumulator, next) => (accumulator || pred(next)), null)
+}
+
+function isMetabolite(metabolite, cofactors = Consts.cofactors) {
+  return !(cofactors.includes(decompartmentalize(metabolite)[0]))
+}
+
 function htmlToElement(html) {
   var template = document.createElement('template');
   html = html.trim(); // Never return a text node of whitespace as the result
   template.innerHTML = html;
   return template.content.firstChild;
+}
+
+function object_slice_for_bigg(obj, bigg_ids) {
+  /** Return a copy of the object with just the given bigg ids.
+   Arguments
+   ---------
+   obj: An object.
+   ids: An array of bigg id strings.
+   */
+  var subset = {};
+
+  _.each(_.keys(obj), function (key) {
+    if (_.contains(bigg_ids, obj[key].bigg_id)) subset[key] = obj[key];
+  });
+
+  return subset;
+}
+
+/**
+ *
+ * @param {*} reactions
+ */
+function get_central_nodes(reactions) {
+  return Object.assign({}, ...Object.entries(reactions).map(([r_id, {segments}]) => {
+    segments = Object.values(segments);
+    if (segments.length >= 5) {
+      segments = segments.filter((segment) => {
+        return (segment.b1 === null && segment.b2 === null);
+      });
+    }
+    const nodes = segments.map((seg) => {
+      return [seg.from_node_id, seg.to_node_id];
+    });
+    // Extract a not ending node
+    const intesection = nodes[0].filter(x => new Set(nodes[1]).has(x));
+    return {[r_id]: [intesection]};
+  }));
 }
