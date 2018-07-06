@@ -64,7 +64,8 @@ module.exports = {
   get_document: get_document,
   get_window: get_window,
   d3_transform_catch: d3_transform_catch,
-  check_browser: check_browser
+  check_browser: check_browser,
+  htmlToElement: htmlToElement,
 }
 
 /**
@@ -1138,4 +1139,11 @@ function check_browser (name) {
   } catch (e) {
     return false
   }
+}
+
+function htmlToElement(html) {
+  var template = document.createElement('template');
+  html = html.trim(); // Never return a text node of whitespace as the result
+  template.innerHTML = html;
+  return template.content.firstChild;
 }
