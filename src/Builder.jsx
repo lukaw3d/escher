@@ -118,7 +118,7 @@ class Builder {
       reaction_no_data_size: 8,
       reaction_knockout: [],
       added_reactions: [],
-      reactions_highlight: [],
+      reaction_highlight: [],
       reaction_opacity: {},
       // gene
       gene_data: null,
@@ -283,7 +283,7 @@ class Builder {
       if (message_fn !== null) setTimeout(message_fn, 500)
 
       // TODO @matyasfodor try to find a generic fnction for this.
-      this.options.reactions_highlight.forEach((reactionId) => {
+      this.options.reaction_highlight.forEach((reactionId) => {
         this.map.bigg_index
           .getAll(reactionId)
           .forEach(({ reaction_id }) => {

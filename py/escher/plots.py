@@ -322,7 +322,7 @@ class Builder(object):
         - reaction_scale
         - reaction_no_data_color
         - reaction_no_data_size
-        - reactions_highlight
+        - reaction_highlight
         - and_method_in_gene_reaction_rule
         - metabolite_styles
         - metabolite_compare_style
@@ -403,7 +403,7 @@ class Builder(object):
             'reaction_no_data_color',
             'reaction_no_data_size',
             'reaction_opacity',
-            'reactions_highlight',
+            'reaction_highlight',
             'and_method_in_gene_reaction_rule',
             'metabolite_styles',
             'metabolite_compare_style',
