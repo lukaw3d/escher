@@ -114,7 +114,7 @@ function turn_everything_on () {
  */
 function toggle_reaction_hover(on_off) {
   if (on_off) {
-    this.reaction_mouseover = function (d) {
+    this.reaction_mouseover = (d) => {
       if (!this.dragging) {
         this.map.callback_manager.run('show_tooltip', null, 'reaction_label', d);
       }
