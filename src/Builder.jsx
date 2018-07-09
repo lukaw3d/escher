@@ -297,8 +297,9 @@ class Builder {
           this.map.bigg_index
             .getAll(reactionBiggId)
             .forEach(({reaction_id}) => {
-              this.selection.select(`#r${reaction_id}`)
-                .style('opacity', opacity)
+              const reaction = this.selection.select(`#r${reaction_id}`);
+              reaction.selectAll('.segment').style('opacity', opacity);
+              reaction.selectAll('.arrowhead').style('opacity', opacity);
             })
         })
 
