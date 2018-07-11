@@ -281,27 +281,10 @@ class Builder {
       this._setup_quick_jump(this.selection)
 
       if (message_fn !== null) setTimeout(message_fn, 500)
+      
+      this.map.set_these_highlights(this.options.reaction_highlight);
 
-      // TODO @matyasfodor try to find a generic fnction for this.
-      this.options.reaction_highlight.forEach((reactionId) => {
-        this.map.bigg_index
-          .getAll(reactionId)
-          .forEach(({ reaction_id }) => {
-            this.selection.select(`#r${reaction_id}`)
-              .style('filter', 'url(#escher-glow-filter)')
-          })
-      })
-
-      Object.entries(this.options.reaction_opacity)
-        .map(([reactionBiggId, opacity]) => {
-          this.map.bigg_index
-            .getAll(reactionBiggId)
-            .forEach(({reaction_id}) => {
-              const reaction = this.selection.select(`#r${reaction_id}`);
-              reaction.selectAll('.segment').style('opacity', opacity);
-              reaction.selectAll('.arrowhead').style('opacity', opacity);
-            })
-        })
+      this.map.set_these_opacity_reactions(this.options.reaction_opacity);
 
       // Finally run callback
       _.defer(() => this.callback_manager.run('first_load', this))
@@ -774,6 +757,20 @@ class Builder {
   draw_knockout_reactions() {
     this.map.draw_these_knockouts(this.options.reaction_knockout)
     this.map.set_status('')
+  }
+
+  set_highlight_reactions(highlight_reaction_ids) {
+    this.map.clear_these_highlights()
+    this.map.set_these_highlights(highlight_reaction_ids)
+
+    this.options.reaction_highlight = highlight_reaction_ids
+  }
+
+  set_opacity_reactions(opacity_reaction_ids) {
+    this.map.clear_these_opacity_reactions()
+    this.map.set_these_opacity_reactions(opacity_reaction_ids)
+
+    this.options.reaction_opacity = opacity_reaction_ids
   }
 
   _reaction_check_add_abs () {
@@ -1286,6 +1283,18 @@ class Builder {
           key: 'set_reaction_fva_data',
           target: this,
           fn: this.set_reaction_fva_data,
+          ignore_with_input: true
+        },
+        set_highlight_reactions: {
+          key: 'set_highlight_reactions',
+          target: this,
+          fn: this.set_highlight_reactions,
+          ignore_with_input: true
+        },
+        set_opacity_reactions: {
+          key: 'set_opacity_reactions',
+          target: this,
+          fn: this.set_opacity_reactions,
           ignore_with_input: true
         },
         toggle_beziers: {

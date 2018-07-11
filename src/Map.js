@@ -65,6 +65,7 @@ var BiggIndex = require('./BiggIndex').BiggIndex
 var bacon = require('baconjs')
 var _ = require('underscore')
 var d3_select = require('d3-selection').select
+var d3_select_all = require('d3-selection').selectAll
 
 var Map = utils.make_class()
 // class methods
@@ -161,6 +162,12 @@ Map.prototype = {
   highlight_node: highlight_node,
   highlight_text_label: highlight_text_label,
   highlight: highlight,
+  // highlights reaction
+  clear_these_highlights: clear_these_highlights,
+  set_these_highlights: set_these_highlights,
+  // opacity reaction
+  clear_these_opacity_reactions: clear_these_opacity_reactions,
+  set_these_opacity_reactions: set_these_opacity_reactions,
   // full screen
   listen_for_full_screen: listen_for_full_screen,
   unlisten_for_full_screen: unlisten_for_full_screen,
@@ -668,6 +675,39 @@ function clear_these_knockouts(reaction_ids) {
   // draw the mark
   utils.draw_an_object(this.sel, '#nodes', '.node', node_subset, 'node_id',
     null, clear_mark)
+}
+
+function clear_these_highlights () {
+  d3_select_all('.highlight').classed('highlight', false);
+}
+
+function set_these_highlights (reaction_ids) {
+  console.log("SET", reaction_ids);
+  reaction_ids.forEach((reactionId) => {
+    this.bigg_index
+      .getAll(reactionId)
+      .forEach(({reaction_id}) => {
+        d3_select(`#r${reaction_id}`).classed('highlight', true);
+      })
+  })
+}
+
+function clear_these_opacity_reactions () {
+  d3_select_all('.segment').style('opacity', 1)
+  d3_select_all('.arrowhead').style('opacity', 1)
+}
+
+function set_these_opacity_reactions (reactions) {
+  Object.entries(reactions)
+    .map(([reactionBiggId, opacity]) => {
+      this.bigg_index
+        .getAll(reactionBiggId)
+        .forEach(({reaction_id}) => {
+          const reaction = d3_select(`#r${reaction_id}`)
+          reaction.selectAll('.segment').style('opacity', opacity)
+          reaction.selectAll('.arrowhead').style('opacity', opacity)
+        })
+    })
 }
 
 /**
