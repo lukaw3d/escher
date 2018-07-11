@@ -1,7 +1,7 @@
 {
   "name": "escher",
   "author": "Zachary King",
-  "version": "1.7.0-beta.4",
+  "version": "1.7.0-decaf",
   "schema_version": "1-0-0",
   "map_model_version": "5",
   "description": "Escher: A Web Application for Building, Sharing, and Embedding Data-Rich Visualizations of Biological Pathways",
@@ -37,12 +37,10 @@
     "cross-env": "^5.1.0",
     "css-loader": "^0.28.4",
     "file-loader": "^1.1.5",
-    "istanbul-instrumenter-loader": "^3.0.0",
     "jsdom": "^11.5.1",
     "mocha": "^2.3.4",
     "mocha-webpack": "^1.0.1",
     "null-loader": "^0.1.1",
-    "nyc": "^11.2.1",
     "raw-loader": "^0.5.1",
     "sinon": "^5.1.0",
     "standard": "^10.0.3",
@@ -76,14 +74,6 @@
     "start": "./node_modules/.bin/webpack-dev-server --config webpack.dev.js",
     "clean": "rm -r dist/*",
     "test": "./node_modules/.bin/mocha-webpack --webpack-config webpack.test.js \"src/tests/*.js\"",
-    "copy": "cp package.json py/escher/ && cp dist/* py/escher/static/escher/ && cp jsonschema/* py/escher/static/jsonschema/",
-    "coverage": "./node_modules/.bin/cross-env NODE_ENV=coverage ./node_modules/.bin/nyc --reporter=text-lcov npm run test | ./node_modules/.bin/coveralls"
-  },
-  "nyc": {
-    "include": [
-      "src/*.js"
-    ],
-    "instrument": false,
-    "sourceMap": false
+    "copy": "cp package.json py/escher/ && cp dist/* py/escher/static/escher/ && cp jsonschema/* py/escher/static/jsonschema/"
   }
 }

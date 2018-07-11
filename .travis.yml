@@ -25,8 +25,18 @@ script:
   - cd py
   - python setup.py test
   - cd ..
+  - npm run build
 # No emails
 notifications:
   email: false
 # Run with containers
 sudo: false
+deploy:
+  provider: npm
+  email: matyas.fodor@gmail.com
+  api_key:
+    secure: RdUPqYXxSBrgQdbkILMX0ozZKS8tw76s6ukZdP5I+FOgKkzaHcS1VrVi/gT7to7BxvzJOxrRrha8fTmmxqfOOngrAO0Cr9SvKL1STXm5k//0xXXrqNTXmx/3JQUQXyomWUGPKsJji8Ew8zHg2qriTp5IdRAmT4e/5MUJ5olEOARMRMKLZlktUa65sTntIlIatqbKfPNNxuMvLzTAWxmv85o2G5r1uljSVchNBEszojRI3LEyK+sA/vjO1KHZybn7c6Gvs3tzl7aCc5PmZgYi8eZ0z6d0e9lrjFvMGthloBVaoUSIC/D91vMoVPH1VB/8RqiPKvXytNqa02V0hp+SL/1qthzo+mTnQLjKpz4m3cJYQ35iRNLFvgUHj0F2xhJLp+fazWTh2krERNPnOil69+tFytOJqAk1mOG+ij1/IsZu196fBEAPsTa3scEKtO7jvhXwGh/Rj4dpOqSOvK+U2aqUan5OszBsLi+i36L2VBOFC6Zt6/jCRE4UZqpv31sBw8qJxfqEG4npyWGd7vAVROlrOQR9AmROHGH8bXDvDCqNPUUyz4+SlEGS1q/2pZxHAdudGpSIk2e8HAq9zjBMzTBvOcDywmpFpjrGkfoQwI3Hzy5GpX+GDyrCqE/3gmdwMJzd+j4m0s2pc+K9D+L2UnoHTGs4bwQfO+syMCnQ1cI=
+  on:
+    tags: true
+    repo: DD-DeCaF/escher
+  skip_cleanup: true
