@@ -88,7 +88,7 @@ class CustomTooltip extends Component {
             <br/>
             <button
               className='buttonKnockout'
-              onClick={this.props.callbacks.knockout}
+              onClick={() => this.props.tooltip_callbacks.knockout(this.props.biggId)}
               data={this.props.data}
               id='knockoutbutton'
             >
@@ -96,7 +96,7 @@ class CustomTooltip extends Component {
             </button>
             <button
               className='buttonObjective'
-              onClick={this.props.callbacks.setAsObjective}
+              onClick={() => this.props.tooltip_callbacks.setAsObjective(this.props.biggId)}
               data={this.props.data}
               id='objectivebutton'
             >
@@ -108,7 +108,7 @@ class CustomTooltip extends Component {
             <label class='switch'>
               <input
                 type='checkbox'
-                onClick={this.props.callbacks.objectiveDirection}/>
+                onClick={() => this.props.tooltip_callbacks.objectiveDirection(this.props.biggId)}/>
               <span class='slider'></span>
             </label>
             <span>
@@ -126,13 +126,13 @@ class CustomTooltip extends Component {
             <br/>
             <button
               className='buttonBound'
-              onClick={this.props.callbacks.changeBounds}
+              onClick={() => this.props.tooltip_callbacks.changeBounds(this.props.biggId)}
               data={this.props.data}>
               Change bounds
             </button>
             <button
               className='buttonBound'
-              onClick={this.props.callbacks.resetBounds}
+              onClick={() => this.props.tooltip_callbacks.resetBounds(this.props.biggId)}
               data={this.props.data}>
               Reset bounds
             </button>

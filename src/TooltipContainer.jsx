@@ -15,7 +15,7 @@ const PlacedDiv = require('./PlacedDiv')
  * @param map
  * @param tooltipComponent
  * @param zoom_container
- * @param callbacks
+ * @param tooltip_callbacks
  */
 var TooltipContainer = utils.make_class()
 // instance methods
@@ -39,7 +39,7 @@ function init (selection, TooltipComponent, zoom_container, callbacks) {
   this.TooltipComponent = TooltipComponent
   this.tooltipRef = null
   this.zoom_container = zoom_container
-  this.callbacks = callbacks
+  this.tooltip_callbacks = callbacks
   this.setup_zoom_callbacks(zoom_container)
 
   // Create callback manager
@@ -187,7 +187,7 @@ function show (type, d) {
       name: d.name,
       loc: coords,
       data: d.data_string,
-      callbacks: this.callbacks,
+      tooltip_callbacks: this.tooltip_callbacks,
       type: type.replace('_label', '').replace('node', 'metabolite').replace('_object', '')
     }
     this.callback_manager.run('setState', null, data)
