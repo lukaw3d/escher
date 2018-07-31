@@ -87,7 +87,7 @@ class CustomTooltip extends Component {
             </button>
             <br/>
             <button
-              className='buttonKnockout'
+              className='buttonCustom'
               onClick={() => this.props.tooltip_callbacks.knockout(this.props.biggId)}
               data={this.props.data}
               id='knockoutbutton'
@@ -95,7 +95,7 @@ class CustomTooltip extends Component {
               Knockout
             </button>
             <button
-              className='buttonObjective'
+              className='buttonCustom'
               onClick={() => this.props.tooltip_callbacks.setAsObjective(this.props.biggId)}
               data={this.props.data}
               id='objectivebutton'
@@ -125,13 +125,13 @@ class CustomTooltip extends Component {
             <input type='number' id='upperbound' className='input'/>
             <br/>
             <button
-              className='buttonBound'
+              className='buttonCustom'
               onClick={() => this.props.tooltip_callbacks.changeBounds(this.props.biggId)}
               data={this.props.data}>
               Change bounds
             </button>
             <button
-              className='buttonBound'
+              className='buttonCustom marginButton'
               onClick={() => this.props.tooltip_callbacks.resetBounds(this.props.biggId)}
               data={this.props.data}>
               Reset bounds
