@@ -22,6 +22,7 @@ import QuickJump from './QuickJump'
 import dataStyles from './data_styles'
 import TooltipContainer from './TooltipContainer'
 import DefaultTooltip from './DefaultTooltip'
+import CustomTooltip from './CustomTooltip'
 import Consts from './Consts'
 
 import _ from 'underscore'
@@ -137,8 +138,10 @@ class Builder {
       highlight_missing: false,
       allow_building_duplicate_reactions: false,
       cofactors: Consts.cofactors,
+      tooltip: 'default',
       // Extensions
-      tooltip_component: DefaultTooltip,
+      tooltip_component: options.tooltip === 'custom' ? CustomTooltip : DefaultTooltip,
+      tooltip_callbacks: null,
       enable_tooltips: ['label', 'object'],
       reaction_scale_preset: null,
       metabolite_scale_preset: null,
@@ -222,7 +225,8 @@ class Builder {
     // Set up the tooltip container
     this.tooltip_container = new TooltipContainer(this.selection,
                                                   this.options.tooltip_component,
-                                                  this.zoom_container)
+                                                  this.zoom_container,
+                                                  this.options.tooltip_callbacks)
 
     // Status in both modes
     this._create_status(this.selection)
