@@ -682,7 +682,6 @@ function clear_these_highlights () {
 }
 
 function set_these_highlights (reaction_ids) {
-  console.log("SET", reaction_ids);
   reaction_ids.forEach((reactionId) => {
     this.bigg_index
       .getAll(reactionId)
