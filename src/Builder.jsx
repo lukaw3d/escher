@@ -141,6 +141,7 @@ class Builder {
       tooltip: 'default',
       // Extensions
       tooltip_component: options.tooltip === 'custom' ? CustomTooltip : DefaultTooltip,
+      reaction_state: null,
       tooltip_callbacks: null,
       enable_tooltips: ['label', 'object'],
       reaction_scale_preset: null,
@@ -226,7 +227,8 @@ class Builder {
     this.tooltip_container = new TooltipContainer(this.selection,
                                                   this.options.tooltip_component,
                                                   this.zoom_container,
-                                                  this.options.tooltip_callbacks)
+                                                  this.options.tooltip_callbacks,
+                                                  this.options.reaction_state)
 
     // Status in both modes
     this._create_status(this.selection)

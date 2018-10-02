@@ -71,3 +71,11 @@ input:checked + .slider:before {
     background: rgb(96,125,139);
 }
 
+.bounds {
+    display: inline;
+}
+
+.hidden {
+    display: none;
+}
+
