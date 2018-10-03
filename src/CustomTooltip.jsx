@@ -44,7 +44,7 @@ class CustomTooltip extends Component {
           {this.props.biggId}
         </span>
           <div className='name'>
-            name:
+            name: {this.props.name}
           </div>
           <div className='data'>
             data: {(this.props.data && this.props.data !== '(nd)'
