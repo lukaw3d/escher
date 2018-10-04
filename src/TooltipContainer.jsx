@@ -100,8 +100,6 @@ function setup_map_callbacks (map) {
       })
       if (d === null) {
         console.warn(`Could not find tooltip data for ${this.currentTooltip}`)
-      } else {
-        this.show(type, d)
       }
     }
   })
