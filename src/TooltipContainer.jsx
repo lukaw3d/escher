@@ -16,6 +16,7 @@ const PlacedDiv = require('./PlacedDiv')
  * @param tooltipComponent
  * @param zoom_container
  * @param tooltip_callbacks
+ * @param reaction_state
  */
 var TooltipContainer = utils.make_class()
 // instance methods
@@ -34,14 +35,15 @@ TooltipContainer.prototype = {
 module.exports = TooltipContainer
 
 // definitions
-function init (selection, TooltipComponent, zoom_container, callbacks) {
+function init (selection, TooltipComponent, zoom_container, callbacks, reaction_state) {
   this.div = selection.append('div').attr('id', 'tooltip-container')
   this.TooltipComponent = TooltipComponent
   this.tooltipRef = null
   this.zoom_container = zoom_container
   this.tooltip_callbacks = callbacks
+  this.reaction_state = reaction_state
   this.setup_zoom_callbacks(zoom_container)
-
+  this.last_position_tooltip = null
   // Create callback manager
   this.callback_manager = CallbackManager()
 
@@ -79,7 +81,7 @@ function setup_map_callbacks (map) {
       .replace('reaction_', '')
       .replace('node_', '')
       .replace('gene_', '')) > -1) {
-      this.show(type, d)
+      this.show(type, d, true)
     }
   }.bind(this))
 
@@ -99,7 +101,7 @@ function setup_map_callbacks (map) {
       if (d === null) {
         console.warn(`Could not find tooltip data for ${this.currentTooltip}`)
       } else {
-        this.show(type, d)
+        this.show(type, d, false)
       }
     }
   })
@@ -131,7 +133,7 @@ function is_visible () {
  * @param {string} type - 'reaction_label', 'node_label', or 'gene_label'
  * @param {Object} d - D3 data for DOM element
  */
-function show (type, d) {
+function show (type, d, checkMousePosition) {
   // d is the new highlight. Reset the previous highlight if it'spresent and it's not the same as d
   if (this.currentHighlight && this.currentHighlight.reaction_id !== d.reaction_id) {
     this.setReactionSize(this.currentHighlight.reaction_id, this.reactionSize(this.currentHighlight.data))
@@ -179,14 +181,17 @@ function show (type, d) {
         offset.y = -(bottomEdge - mapSize.height + 47) / windowScale
       }
     }
-    const [mouseX, mouseY] = d3_mouse(this.map.sel.node())
-    const coords = { x: mouseX + 5, y: mouseY + 5 }
-    this.placed_div.place(coords)
+    if (checkMousePosition) {
+      const [mouseX, mouseY] = d3_mouse(this.map.sel.node())
+      this.last_position_tooltip = { x: mouseX + 5, y: mouseY + 5 }
+    }
+    this.placed_div.place(this.last_position_tooltip)
     const data = {
       biggId: d.bigg_id,
       name: d.name,
-      loc: coords,
+      loc: this.last_position_tooltip,
       data: d.data_string,
+      reaction_state: this.reaction_state,
       tooltip_callbacks: this.tooltip_callbacks,
       type: type.replace('_label', '').replace('node', 'metabolite').replace('_object', '')
     }

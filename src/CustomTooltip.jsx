@@ -11,6 +11,14 @@ import './CustomTooltip.css'
 const utils = require('./utils')
 
 class CustomTooltip extends Component {
+  constructor () {
+    super()
+    this.state = {
+      lowerbound: null,
+      upperbound: null
+    }
+  }
+
   decompartmentalizeCheck (id, type) {
     // ID without compartment, if metabolite.
     return type === 'metabolite'
@@ -32,6 +40,32 @@ class CustomTooltip extends Component {
     return typeof s === 'string'
       ? s.charAt(0).toUpperCase() + s.slice(1)
       : console.warn('capitalizeFirstLetter was passed something other than a string')
+  }
+
+  handleChangeLower (event) {
+    this.setState({
+      lowerbound: event.target.value
+    })
+  }
+
+  handleChangeUpper (event) {
+    this.setState({
+      upperbound: event.target.value
+    })
+  }
+
+  changeBounds () {
+    this.props.tooltip_callbacks.changeBounds(this.props.biggId,
+      this.state.lowerbound || this.props.reaction_state(this.props.biggId).bounds.lowerbound,
+      this.state.upperbound || this.props.reaction_state(this.props.biggId).bounds.upperbound)
+    this.resetState()
+  }
+
+  resetState () {
+    this.setState({
+      lowerbound: null,
+      upperbound: null
+    })
   }
 
   render () {
@@ -65,84 +99,97 @@ class CustomTooltip extends Component {
         </div>
       )
     } else {
-      {
-        return (
-          <div className='tooltip'>
+      return (
+        <div className='tooltip'>
         <span className='id'>
           {this.props.biggId}
         </span>
-            <div className='name'>
-              name: {this.props.name}
-            </div>
-            <div className='data'>
-              data: {(this.props.data && this.props.data !== '(nd)'
-              ? this.props.data
-              : 'no data')}
-            </div>
-            <button
-              className='biggIdButton'
-              onClick={() => this.openBigg()}
-            >
-              {biggButtonText}
-            </button>
-            <br/>
-            <button
-              className='buttonCustom'
-              onClick={() => this.props.tooltip_callbacks.knockout(this.props.biggId)}
-              data={this.props.data}
-              id='knockoutbutton'
-            >
-              Knockout
-            </button>
-            <button
-              className='buttonCustom'
-              onClick={() => this.props.tooltip_callbacks.setAsObjective(this.props.biggId)}
-              data={this.props.data}
-              id='objectivebutton'
-            >
-              Set as objective
-            </button>
-            <span className='span-margin-right'>
-              Min
-            </span>
+          <div className='name'>
+            name: {this.props.name}
+          </div>
+          <div className='data'>
+            data: {(this.props.data && this.props.data !== '(nd)'
+            ? this.props.data
+            : 'no data')}
+          </div>
+          <button
+            className='biggIdButton'
+            onClick={() => this.openBigg()}
+          >
+            {biggButtonText}
+          </button>
+          <br/>
+          <button
+            className='buttonCustom'
+            onClick={() => this.props.tooltip_callbacks.knockout(this.props.biggId)}
+            data={this.props.data}
+            id='knockoutbutton'
+          >
+            {this.props.reaction_state(this.props.biggId).knockout ? 'Undo knockout' : 'Knockout'}
+          </button>
+          <button
+            className='buttonCustom'
+            onClick={() => this.props.tooltip_callbacks.setAsObjective(this.props.biggId)}
+            data={this.props.data}
+            id='objectivebutton'
+          >
+            {this.props.reaction_state(this.props.biggId).objective &&
+            this.props.reaction_state(this.props.biggId).objective.reactionId === this.props.biggId ?
+              'Undo set as objective' : 'Set as objective'}
+          </button>
+          <div class={'bounds'} className={!this.props.reaction_state(this.props.biggId).objective
+          || this.props.reaction_state(this.props.biggId).objective.reactionId !== this.props.biggId
+            ? 'hidden' : 'bounds'}>
+              <span className='span-margin-right'>
+                Min
+              </span>
             <label class='switch'>
               <input
                 type='checkbox'
+                checked={this.props.reaction_state(this.props.biggId).objective && this.props.reaction_state(this.props.biggId).objective.direction === 'max'}
                 onClick={() => this.props.tooltip_callbacks.objectiveDirection(this.props.biggId)}/>
               <span class='slider'></span>
             </label>
             <span>
-              Max
-            </span>
-            <br/>
-            <span>
+                Max
+              </span>
+          </div>
+          <br/>
+          <span>
               Lower bound
             </span>
-            <input type='number' id='lowerbound' className='input'/>
-            <span>
+          <input type='number'
+                 className='input'
+                 name='lowerbound'
+                 onChange={event => this.handleChangeLower(event)}
+                 value={this.state.lowerbound || this.props.reaction_state(this.props.biggId).bounds.lowerbound}/>
+          <span>
               Upper bound
             </span>
-            <input type='number' id='upperbound' className='input'/>
-            <br/>
-            <button
-              className='buttonCustom'
-              onClick={() => this.props.tooltip_callbacks.changeBounds(this.props.biggId)}
-              data={this.props.data}>
-              Change bounds
-            </button>
-            <button
-              className='buttonCustom marginButton'
-              onClick={() => this.props.tooltip_callbacks.resetBounds(this.props.biggId)}
-              data={this.props.data}>
-              Reset bounds
-            </button>
-            <div
-              className='typeLabel'>
-              {this.capitalizeFirstLetter(this.props.type)}
-            </div>
+          <input type='number'
+                 className='input'
+                 name='upperbound'
+                 onChange={event => this.handleChangeUpper(event)}
+                 value={this.state.upperbound || this.props.reaction_state(this.props.biggId).bounds.upperbound}/>
+          <br/>
+          <button
+            className='buttonCustom'
+            onClick={() => this.changeBounds()}
+            data={this.props.data}>
+            Change bounds
+          </button>
+          <button
+            className='buttonCustom marginButton'
+            onClick={() => this.props.tooltip_callbacks.resetBounds(this.props.biggId)}
+            data={this.props.data}>
+            Reset bounds
+          </button>
+          <div
+            className='typeLabel'>
+            {this.capitalizeFirstLetter(this.props.type)}
           </div>
-        )
-      }
+        </div>
+      )
     }
   }
 }
