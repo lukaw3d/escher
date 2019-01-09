@@ -649,8 +649,8 @@ function draw_these_knockouts(reaction_ids) {
   // find reactions for reaction_ids
   const knocked_out = utils.object_slice_for_bigg(this.reactions, reaction_ids)
 
-  // get central nodes for reactions
-  var node_ids = Object.entries(utils.get_central_nodes(knocked_out))
+  // get central or last nodes for reactions
+  var node_ids = Object.entries(utils.get_central_or_last_nodes(knocked_out))
     .map(([r, nodes]) => nodes[0])
   var node_subset = utils.object_slice_for_ids_ref(this.nodes, node_ids)
 
@@ -663,8 +663,8 @@ function clear_these_knockouts(reaction_ids) {
   // find reactions for reaction_ids
   const knocked_out = utils.object_slice_for_bigg(this.reactions, reaction_ids)
 
-  // get central nodes for reactions
-  const node_ids = Object.entries(utils.get_central_nodes(knocked_out))
+  // get central or last nodes for reactions
+  const node_ids = Object.entries(utils.get_central_or_last_nodes(knocked_out))
     .map(([r, nodes]) => nodes[0])
   var node_subset = utils.object_slice_for_ids_ref(this.nodes, node_ids)
 
