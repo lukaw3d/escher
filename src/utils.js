@@ -72,7 +72,7 @@ module.exports = {
   isMetabolite: isMetabolite,
   htmlToElement: htmlToElement,
   object_slice_for_bigg: object_slice_for_bigg,
-  get_central_nodes: get_central_nodes,
+  get_central_or_last_nodes: get_central_or_last_nodes,
 }
 
 /**
@@ -1191,7 +1191,7 @@ function object_slice_for_bigg(obj, bigg_ids) {
  *
  * @param {*} reactions
  */
-function get_central_nodes(reactions) {
+function get_central_or_last_nodes(reactions) {
   return Object.assign({}, ...Object.entries(reactions).map(([r_id, {segments}]) => {
     segments = Object.values(segments);
     if (segments.length >= 5) {
@@ -1202,8 +1202,13 @@ function get_central_nodes(reactions) {
     const nodes = segments.map((seg) => {
       return [seg.from_node_id, seg.to_node_id];
     });
-    // Extract a not ending node
-    const intesection = nodes[0].filter(x => new Set(nodes[1]).has(x));
-    return {[r_id]: [intesection]};
+    let node;
+    if (nodes.length === 1) {
+      // Use the last node for reactions with one segment
+      node = nodes[0][1];
+    } else {
+      // Extract a not ending node
+      node = nodes[0].filter(x => new Set(nodes[1]).has(x));}
+    return {[r_id]: [node]};
   }));
 }
