@@ -71,7 +71,7 @@ class CustomTooltip extends Component {
   render () {
     const decomp = this.decompartmentalizeCheck(this.props.biggId, this.props.type)
     const biggButtonText = `Open ${decomp} in BiGG Models.`
-    if (this.props.type !== 'reaction') {
+    if (this.props.type === 'metabolite') {
       return (
         <div className='tooltip'>
         <span className='id'>
@@ -90,6 +90,41 @@ class CustomTooltip extends Component {
             onClick={() => this.openBigg()}
           >
             {biggButtonText}
+          </button>
+          <div
+            className='typeLabel'
+          >
+            {this.capitalizeFirstLetter(this.props.type)}
+          </div>
+        </div>
+      )
+    } else if (this.props.type === 'gene') {
+      return (
+        <div className='tooltip'>
+        <span className='id'>
+          {this.props.biggId}
+        </span>
+          <div className='name'>
+            name: {this.props.name}
+          </div>
+          <div className='data'>
+            data: {(this.props.data && this.props.data !== '(nd)'
+            ? this.props.data
+            : 'no data')}
+          </div>
+          <button
+            className='biggIdButton'
+            onClick={() => this.openBigg()}
+          >
+            {biggButtonText}
+          </button>
+          <button
+            className='buttonCustom knockoutgenes'
+            onClick={() => this.props.tooltip_callbacks.knockoutGenes(this.props.biggId)}
+            data={this.props.data}
+            id='knockoutbutton'
+          >
+            {this.props.reaction_state(this.props.biggId).knockoutGenes ? 'Undo knockout' : 'Knockout'}
           </button>
           <div
             className='typeLabel'

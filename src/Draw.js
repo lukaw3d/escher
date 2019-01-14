@@ -187,7 +187,7 @@ function update_knockout_mark(update_selection) {
   
     this.callback_manager.run('update_knockout_mark', this, update_selection);
 }
-  
+
 function update_reaction_opacity(update_selection) {
   
     update_selection.selectAll('.segment')
@@ -290,6 +290,7 @@ function update_reaction_label (update_selection, has_data_on_reactions) {
   // enter
   var gene_g = all_genes_g.enter()
     .append('g')
+    .attr('id', function (d) { return 'g' + d.bigg_id; })
     .attr('class', 'gene-label-group')
   gene_g.append('text')
     .attr('class', 'gene-label')

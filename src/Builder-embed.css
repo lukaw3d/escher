@@ -140,3 +140,7 @@ svg.escher-svg .cursor-grabbing {
 svg.escher-svg .edit-text-cursor {
   cursor: text;
 }
+svg.escher-svg .gene-ko-mark {
+  text-decoration: line-through;
+  fill: red;
+}
