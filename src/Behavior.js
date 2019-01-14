@@ -113,14 +113,7 @@ function turn_everything_on () {
  * Listen for mouse events on reactions.
  */
 function toggle_reaction_hover(on_off) {
-  if (on_off) {
-    this.reaction_mouseover = (d) => {
-      if (!this.dragging) {
-        //this.map.callback_manager.run('show_tooltip', null, 'reaction_label', d);
-      }
-    };
-
-  } else {
+  if (!on_off) {
     this.reaction_mouseout = null;
     this.reaction_mouseover = null;
   }
