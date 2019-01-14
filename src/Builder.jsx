@@ -124,6 +124,7 @@ class Builder {
       // gene
       gene_data: null,
       and_method_in_gene_reaction_rule: 'mean',
+      gene_knockout: [],
       // metabolite
       metabolite_data: null,
       metabolite_styles: ['color', 'size', 'text'],
@@ -765,6 +766,14 @@ class Builder {
     this.map.set_status('')
   }
 
+  set_knockout_genes(knockout_gene_ids) {
+    this.map.clear_gene_knockouts(this.options.gene_knockout)
+    this.map.draw_gene_knockouts(knockout_gene_ids)
+
+    this.options.gene_knockout = knockout_gene_ids
+    this.map.set_status('')
+  }
+
   set_highlight_reactions(highlight_reaction_ids) {
     this.map.clear_these_highlights()
     this.map.set_these_highlights(highlight_reaction_ids)
@@ -1283,6 +1292,12 @@ class Builder {
           key: 'draw_knockout_reactions',
           target: this,
           fn: this.undo_knockout_reaction,
+          ignore_with_input: true
+        },
+        set_knockout_genes: {
+          key: 'set_knockout_genes',
+          target: this,
+          fn: this.set_knockout_genes,
           ignore_with_input: true
         },
         set_reaction_fva_data: {

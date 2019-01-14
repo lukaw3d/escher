@@ -124,6 +124,9 @@ Map.prototype = {
   // draw knockouts
   draw_these_knockouts: draw_these_knockouts,
   clear_these_knockouts: clear_these_knockouts,
+  // draw gene knockouts
+  draw_gene_knockouts: draw_gene_knockouts,
+  clear_gene_knockouts: clear_gene_knockouts,
   // draw added reactions
   draw_one_added_reaction: draw_one_added_reaction,
   // draw nodes
@@ -675,6 +678,18 @@ function clear_these_knockouts(reaction_ids) {
   // draw the mark
   utils.draw_an_object(this.sel, '#nodes', '.node', node_subset, 'node_id',
     null, clear_mark)
+}
+
+function draw_gene_knockouts(gene_ids) {
+  for (let id of gene_ids) {
+    d3_select('#g' + id).select('text').classed('gene-ko-mark', true);
+  }
+}
+
+function clear_gene_knockouts(gene_ids) {
+  for (let id of gene_ids) {
+    d3_select('#g' + id).select('text').classed('gene-ko-mark', false);
+  }
 }
 
 function clear_these_highlights () {
