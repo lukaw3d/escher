@@ -422,6 +422,10 @@ function toggle_label_mouseover (on_off) {
       }
     }.bind(this)
 
+    this.label_mouseout = function () {
+      this.map.callback_manager.run('delay_hide_tooltip')
+    }.bind(this)
+
   } else {
     this.label_mouseover = null
   }
