@@ -682,13 +682,13 @@ function clear_these_knockouts(reaction_ids) {
 
 function draw_gene_knockouts(gene_ids) {
   for (let id of gene_ids) {
-    d3_select('#g' + id).select('text').classed('gene-ko-mark', true);
+    d3_select_all('#g' + id).select('text').classed('gene-ko-mark', true);
   }
 }
 
 function clear_gene_knockouts(gene_ids) {
   for (let id of gene_ids) {
-    d3_select('#g' + id).select('text').classed('gene-ko-mark', false);
+    d3_select_all('#g' + id).select('text').classed('gene-ko-mark', false);
   }
 }
 
