@@ -440,6 +440,10 @@ function update_segment (update_selection, scale, cobra_model,
       curve += (end.x + ',' + end.y)
       return curve
     })
+    .attr('stroke-dasharray', function (d) {
+      var f = d.data
+      return f === null ? '23, 23' : null
+    })
     .style('stroke', function(d) {
       var reaction_id = this.parentNode.parentNode.__data__.bigg_id
       var show_missing = (highlight_missing &&
