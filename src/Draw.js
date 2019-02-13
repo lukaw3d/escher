@@ -193,7 +193,10 @@ function update_reaction_opacity(update_selection) {
     update_selection.selectAll('.segment')
         .style('opacity', function(d) {
             var reaction_data = this.parentNode.parentNode.__data__;
-            var opacity = utils.calculate_fva_opacity(d.data, reaction_data.lower_bound, reaction_data.upper_bound, 0.1);
+            var opacity = utils.calculate_fva_opacity(d.data, reaction_data.lower_bound, reaction_data.upper_bound);
+            if (isNaN(opacity)) {
+              opacity = 1;
+            }
             return opacity;
         });
 }

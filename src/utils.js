@@ -1148,11 +1148,19 @@ function check_browser (name) {
   }
 }
 
-function calculate_fva_opacity(flux, lower, upper, small_value) {
-  var flux_positive = flux > 0 ? 1 : -1
-  flux += small_value * flux_positive
-
-  return Math.abs(flux) / (Math.abs(flux) + Math.abs(upper - lower));
+function calculate_fva_opacity(flux, lower, upper) {
+  if (Math.abs(lower - upper) < 1e-6) {
+    return 1;
+  }
+  else if (lower < 0 && upper > 0) {
+    return 0.2;
+  }
+  else if (lower <= 1e-6 || upper >= -1e-6) {
+    return 0.5;
+  }
+  else if (lower > 1e-6 || upper < -1e-6) {
+    return 0.8;
+  }
 }
 
 // returns the first element
