@@ -51,6 +51,15 @@ class ButtonPanel extends Component {
             <i className='icon-resize-full-alt' />
           </button>
         </li>
+        <li>
+          <button
+            className='button btn'
+            onClick={() => this.props.search()}
+            title='Show Search'
+          >
+            <i className='icon-search' />
+          </button>
+        </li>
         <li
           className='grouping'
           style={this.props.all && this.props.enableEditing

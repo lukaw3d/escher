@@ -31,6 +31,7 @@ import { json as d3Json } from 'd3-request'
 
 // Include custom font set for icons
 import '../icons/css/fontello.css'
+import '../icons/css/fontello-search.css'
 
 // Include GUI CSS normally with webpack
 import './Builder.css'
@@ -601,6 +602,7 @@ class Builder {
         all={this.options.menu === 'all'}
         fullscreen={this.options.full_screen_button}
         enableEditing={this.options.enable_editing}
+        search={() => this.renderSearchBar()}
         setMode={(newMode) => this._set_mode(newMode)}
         zoomContainer={this.zoom_container}
         map={this.map}
