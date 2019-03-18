@@ -94,6 +94,41 @@ class Builder {
       full_screen_button: false,
       ignore_bootstrap: false,
       disabled_buttons: null,
+      semantic_zoom: [
+          {
+            zoomLevel: 0.12,
+            options: {
+              hide_all_labels: true,
+              show_gene_reaction_rules: false,
+              hide_secondary_metabolites: true
+            }
+          },
+          {
+            zoomLevel: 0.3,
+            options: {
+              hide_all_labels: false,
+              show_gene_reaction_rules: false,
+              hide_secondary_metabolites: true
+            }
+          },
+          {
+            zoomLevel: 0.4,
+            options: {
+              hide_all_labels: false,
+              show_gene_reaction_rules: false,
+              hide_secondary_metabolites: false
+            }
+          },
+          {
+            zoomLevel: 1,
+            options: {
+              hide_all_labels: false,
+              show_gene_reaction_rules: true,
+              hide_secondary_metabolites: false
+            }
+          }
+        ],
+        
       // map, model, and styles
       starting_reaction: null,
       never_ask_before_quit: false,
@@ -224,6 +259,23 @@ class Builder {
     this.zoom_container.callback_manager.set('svg_finish', function () {
       if (this.map) this.map.set_status('')
     }.bind(this))
+    this.zoom_container.callback_manager.set('zoomChange', function () {
+        if (this.options.semantic_zoom) {
+          const scale = this.zoom_container.window_scale
+          const optionObject = this.options.semantic_zoom
+          .sort((a, b) => a.zoomLevel - b.zoomLevel)
+          .find(a => a.zoomLevel > scale)
+          if (optionObject) {
+            Object.entries(optionObject.options).map(([option, value]) => {
+              if (this.options[option] !== value) {
+                this.settings.set_conditional(option, value)
+                this._update_data(false, true)
+              }
+            })
+          }
+        }
+      }.bind(this))
+      
 
     // Set up the tooltip container
     this.tooltip_container = new TooltipContainer(this.selection,
