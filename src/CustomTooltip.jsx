@@ -119,7 +119,7 @@ class CustomTooltip extends Component {
             {biggButtonText}
           </button>
           <button
-            className='buttonCustom knockoutgenes'
+            className={!this.props.reaction_state(this.props.biggId, 'gene').includedInModel ? 'hidden' : '' + 'buttonCustom knockoutgenes'}
             onClick={() => this.props.tooltip_callbacks.knockoutGenes(this.props.biggId)}
             data={this.props.data}
             id='knockoutbutton'
