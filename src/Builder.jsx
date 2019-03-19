@@ -270,6 +270,9 @@ class Builder {
               if (this.options[option] !== value) {
                 this.settings.set_conditional(option, value)
                 this._update_data(false, true)
+                if (this.options.gene_knockout.length > 0) {
+                  this.set_knockout_genes(this.options.gene_knockout)
+                }
               }
             })
           }
