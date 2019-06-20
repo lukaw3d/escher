@@ -1186,13 +1186,7 @@ function object_slice_for_bigg(obj, bigg_ids) {
    obj: An object.
    ids: An array of bigg id strings.
    */
-  var subset = {};
-
-  _.each(_.keys(obj), function (key) {
-    if (_.contains(bigg_ids, obj[key].bigg_id)) subset[key] = obj[key];
-  });
-
-  return subset;
+  return _.pick(obj, (r) => _.contains(bigg_ids, r.bigg_id));
 }
 
 /**
