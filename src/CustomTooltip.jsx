@@ -197,6 +197,7 @@ class CustomTooltip extends Component {
             <input type='number'
                    className='input'
                    name='lowerbound'
+                   step='any'
                    onChange={event => this.handleChangeLower(event)}
                    value={this.state.lowerbound || this.props.reaction_state(this.props.biggId).bounds.lowerbound}/>
             <span>
@@ -205,6 +206,7 @@ class CustomTooltip extends Component {
             <input type='number'
                    className='input'
                    name='upperbound'
+                   step='any'
                    onChange={event => this.handleChangeUpper(event)}
                    value={this.state.upperbound || this.props.reaction_state(this.props.biggId).bounds.upperbound}/>
             <br/>
