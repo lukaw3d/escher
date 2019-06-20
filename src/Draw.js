@@ -176,8 +176,8 @@ function update_knockout_mark(update_selection) {
         .text('X')
         .style('fill', 'red')
         .style('font-size', '95px')
-        .attr('dx', -25)
-        .attr('dy', 30);
+        .attr('text-anchor', 'middle')
+        .attr('alignment-baseline', 'middle')
 
     this.callback_manager.run('update_knockout_mark', this, update_selection);
 }
