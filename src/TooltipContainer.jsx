@@ -3,6 +3,8 @@ import CallbackManager from './CallbackManager'
 import PlacedDiv from './PlacedDiv'
 import renderWrapper from './renderWrapper'
 import _ from 'underscore'
+import { mouse as d3_mouse } from 'd3-selection'
+import { select as d3_select } from 'd3-selection'
 
 /**
  * Manage the tooltip that lives in a PlacedDiv.
@@ -31,6 +33,7 @@ export default class TooltipContainer {
     this.settings = settings
 
     this.delay_hide_timeout = null
+    this.currentHighlight = null
     this.currentTooltip = null
 
     renderWrapper(
@@ -117,6 +120,13 @@ export default class TooltipContainer {
    * @param {Object} d - D3 data for DOM element
    */
   show (type, d) {
+    // d is the new highlight. Reset the previous highlight if it'spresent and it's not the same as d
+    if (this.currentHighlight && this.currentHighlight.reaction_id !== d.reaction_id) {
+      this.setReactionSize(this.currentHighlight.reaction_id, this.reactionSize(this.currentHighlight.data))
+    }
+    // Set the new highlight
+    this.setReactionSize(d.reaction_id, this.reactionSize(d.data) * 2.1)
+    this.currentHighlight = d
     // get rid of a lingering delayed hide
     this.cancelHideTooltip()
 
@@ -157,7 +167,8 @@ export default class TooltipContainer {
           offset.y = -(bottomEdge - mapSize.height + 47) / windowScale
         }
       }
-      const coords = { x: startPosX + offset.x, y: startPosY + 10 + offset.y }
+      const [mouseX, mouseY] = d3_mouse(this.map.sel.node())
+      const coords = { x: mouseX + 5, y: mouseY + 5 }
       this.placedDiv.place(coords)
       this.passProps({
         display: true,
@@ -165,6 +176,8 @@ export default class TooltipContainer {
         name: d.name,
         loc: coords,
         data: d.data_string,
+        reaction_state: this.settings.get('reaction_state'),
+        tooltip_callbacks: this.settings.get('tooltip_callbacks'),
         type: type.replace('_label', '').replace('node', 'metabolite').replace('_object', '')
       })
     } else {
@@ -176,9 +189,27 @@ export default class TooltipContainer {
    * Hide the input.
    */
   hide () {
+    if (this.currentHighlight) {
+      this.setReactionSize(this.currentHighlight.reaction_id, this.reactionSize(this.currentHighlight.data))
+    }
     this.placedDiv.hide()
-    this.currentTooltip = null
   }
+
+  /**
+   * Get size for the reaction
+   */
+  reactionSize (data) {
+    return data ? this.map.scale.reaction_size(data) : this.map.settings.get('reaction_no_data_size');
+  }
+
+  setReactionSize (id, size) {
+    d3_select(`#r${id}`)
+      .selectAll('.segment')
+      .transition()
+      .style('stroke-width', size)
+      .duration(100);
+  }
+
 
   /**
    * Hide the input after a short delay, so that mousing onto the tooltip does not

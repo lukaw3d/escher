@@ -22,7 +22,6 @@ coverage/
 .nyc_output/
 
 # npm and yarn
-package-lock.json
 node_modules/
 .yarnclean
 .mypy_cache/

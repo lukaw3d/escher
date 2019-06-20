@@ -9,10 +9,12 @@ import KeyManager from './KeyManager'
 import Canvas from './Canvas'
 import * as dataStyles from './dataStyles'
 import SearchIndex from './SearchIndex'
+import { BiggIndex } from './BiggIndex'
 
 import bacon from 'baconjs'
 import _ from 'underscore'
 import { select as d3Select } from 'd3-selection'
+import { selectAll as d3_select_all } from 'd3-selection'
 
 function _on_array (fn) {
   return function (array) { return fn.apply(null, array) }
@@ -127,15 +129,12 @@ export default class Map {
     // make the search index
     this.enable_search = enable_search
     this.search_index = new SearchIndex()
+    this.bigg_index = new BiggIndex()
 
     // map properties
     this.map_name = map_name
     this.map_id = map_id
     this.map_description = map_description
-
-    // deal with the window
-    var window_translate = { x: 0, y: 0 }
-    var window_scale = 1
 
     // hide beziers
     this.beziers_enabled = false
@@ -199,6 +198,10 @@ export default class Map {
         map.search_index.insert('n_name' + n_id, { name: node.name,
                                                    data: { type: 'metabolite',
                                                            node_id: n_id }})
+
+        if (node.bigg_id) {
+          map.bigg_index.insert(node.bigg_id, n_id, node)
+        }
       }
     }
 
@@ -217,6 +220,9 @@ export default class Map {
                                 { 'name': reaction.name,
                                   'data': { type: 'reaction',
                                             reaction_id: r_id }})
+        if (reaction.bigg_id) {
+          map.bigg_index.insert(reaction.bigg_id, r_id, reaction)
+        }
         for (var g_id in reaction.genes) {
           var gene = reaction.genes[g_id]
           map.search_index.insert('r' + r_id + '_g' + g_id,
@@ -502,6 +508,167 @@ export default class Map {
       this.clear_deleted_beziers()
     }
   }
+
+  draw_these_knockouts (reaction_ids) {
+    // find reactions for reaction_ids
+    const knocked_out = utils.object_slice_for_bigg(this.reactions, reaction_ids)
+
+    // get central or last nodes for reactions
+    var node_ids = Object.entries(utils.get_central_or_last_nodes(knocked_out))
+      .map(([r, nodes]) => nodes[0])
+    var node_subset = utils.object_slice_for_ids_ref(this.nodes, node_ids)
+
+    // draw the mark
+    utils.draw_an_object(this.sel, '#nodes', '.node', node_subset, 'node_id',
+      null, this.draw.update_knockout_mark.bind(this.draw))
+  }
+
+  clear_these_knockouts (reaction_ids) {
+    // find reactions for reaction_ids
+    const knocked_out = utils.object_slice_for_bigg(this.reactions, reaction_ids)
+
+    // get central or last nodes for reactions
+    const node_ids = Object.entries(utils.get_central_or_last_nodes(knocked_out))
+      .map(([r, nodes]) => nodes[0])
+    var node_subset = utils.object_slice_for_ids_ref(this.nodes, node_ids)
+
+    var clear_mark = (selection) => {
+      return selection.selectAll('.ko-mark').remove()
+    }
+
+    // draw the mark
+    utils.draw_an_object(this.sel, '#nodes', '.node', node_subset, 'node_id',
+      null, clear_mark)
+  }
+
+  draw_gene_knockouts (gene_ids) {
+    for (let id of gene_ids) {
+      d3_select_all('#g' + id).select('text').classed('gene-ko-mark', true);
+    }
+  }
+
+  clear_gene_knockouts (gene_ids) {
+    for (let id of gene_ids) {
+      d3_select_all('#g' + id).select('text').classed('gene-ko-mark', false);
+    }
+  }
+
+  clear_these_highlights () {
+    d3_select_all('.highlight').classed('highlight', false);
+  }
+
+  set_these_highlights (reaction_ids) {
+    reaction_ids.forEach((reactionId) => {
+      this.bigg_index
+        .getAll(reactionId)
+        .forEach(({reaction_id}) => {
+          d3Select(`#r${reaction_id}`).classed('highlight', true);
+        })
+    })
+  }
+
+  clear_these_opacity_reactions () {
+    d3_select_all('.segment').style('opacity', 1)
+    d3_select_all('.arrowhead').style('opacity', 1)
+  }
+
+  set_these_opacity_reactions (reactions) {
+    Object.entries(reactions)
+      .map(([reactionBiggId, opacity]) => {
+        this.bigg_index
+          .getAll(reactionBiggId)
+          .forEach(({reaction_id}) => {
+            const reaction = d3Select(`#r${reaction_id}`)
+            reaction.selectAll('.segment').style('opacity', opacity)
+            reaction.selectAll('.arrowhead').style('opacity', opacity)
+          })
+      })
+  }
+
+  /**
+   * Attempts to draw one reaction. First it tries to draw it to the already
+   * previously added reactions. If it's not working, then it looks up normal reactions
+   * returns the reactionId successfully added or undefined
+   * @param {*} reactionIds
+   * @param {*} previouslyAddedReactionIds
+   */
+  draw_one_added_reaction (reactionIds, previouslyAddedReactionIds) {
+    let added
+    const previouslyAddedRactionsMetabolites = previouslyAddedReactionIds
+      .map((reactionIds) => this.cobra_model.reactions[reactionIds])
+      .reduce((accumulator, reaction) => accumulator.concat(Object.keys(reaction.metabolites)), [])
+      .filter((metabolite) => this.isMetabolite.call(this, metabolite))
+      .filter((metabolite) => {
+        const nodes = this.bigg_index.getAll(metabolite)
+        return nodes.some((node) => node.node_is_primary)
+      })
+    // added = reactionIds.find(()
+    added = utils.findMap(reactionIds, (reactionId) => {
+      return this.try_drawing_reaction.call(this, reactionId, previouslyAddedRactionsMetabolites)
+    })
+    if (!added) {
+      const allMetabolites = this.bigg_index
+        .keys()
+        .filter((metabolite) => this.isMetabolite.call(this, metabolite))
+        .filter((metabolite) => {
+          const nodes = this.bigg_index.getAll(metabolite)
+          return nodes.some((node) => node.node_is_primary)
+        })
+      added = utils.findMap(reactionIds, (reactionId) => {
+        return this.try_drawing_reaction.call(this, reactionId, allMetabolites)
+      })
+    }
+
+    return added
+  }
+
+  /**
+   * Tries to add reaction to metabolites
+   * @param {*} reactionId
+   * @param {*} metabolites
+   */
+  try_drawing_reaction (reactionId, metabolites) {
+    const reaction = this.cobra_model.reactions[reactionId]
+    const reactionMetabolites = Object.keys(reaction.metabolites)
+    reactionMetabolites.sort();
+    const selectedMetabolite = metabolites.find((metabolite) => {
+      return reactionMetabolites.find((reactionMetabolite) => {
+        return metabolite === reactionMetabolite
+      })
+    })
+    if (!selectedMetabolite) {
+      return false
+    }
+    const { escherId } = this.bigg_index.getOneWithId(selectedMetabolite)
+    return this.new_reaction_for_metabolite(reaction.bigg_id, escherId, 90)
+  }
+
+  isMetabolite (metabolite) {
+    return utils.isMetabolite(metabolite, this.settings.get('cofactors'))
+  }
+
+  update_these_reactions_opacity (reactions_obj) {
+    // find reactions for reaction_ids
+    var reaction_subset = utils.object_slice_for_bigg(this.reactions, _.keys(reactions_obj))
+
+    _.each(_.keys(reaction_subset), (id) => {
+      var bigg_id = reaction_subset[id].bigg_id
+      var fva_data = reactions_obj[bigg_id]
+
+      reaction_subset[id].lower_bound = fva_data.lower_bound
+      reaction_subset[id].upper_bound = fva_data.upper_bound
+    })
+
+    // function to update reactions
+    var update_fn = (sel) => {
+      return this.draw.update_reaction_opacity(sel)
+    }
+
+    // draw the reactions
+    utils.draw_an_object(this.sel, '#reactions', '.reaction', reaction_subset,
+                         'reaction_id', null, update_fn)
+  }
+
 
   /**
    * Draw all nodes, and clear deleted nodes.
@@ -849,12 +1016,6 @@ export default class Map {
   // ---------------------------------------------------------------------
   // Node interaction
   // ---------------------------------------------------------------------
-
-  get_coords_for_node (node_id) {
-    var node = this.nodes[node_id],
-        coords = { x: node.x, y: node.y }
-    return coords
-  }
 
   get_selected_node_ids () {
     var selected_node_ids = []
@@ -1327,6 +1488,8 @@ export default class Map {
           console.warn('Could not find deleted metabolite in search index')
         }
       }
+      const node = this.nodes[nodeId]
+      this.bigg_index.remove(node.bigg_id, nodeId)
       delete this.nodes[nodeId]
     })
   }
@@ -1384,6 +1547,10 @@ export default class Map {
       // remove from search index
       var found = (this.search_index.remove('r' + reaction_id)
                    && this.search_index.remove('r_name' + reaction_id))
+
+      // deletes all other reactions with this bigg_id
+      this.bigg_index.remove(reaction.bigg_id, reaction_id)
+
       if (!found)
         console.warn('Could not find deleted reaction ' +
                      reaction_id + ' in search index')
@@ -1496,7 +1663,7 @@ export default class Map {
     var reaction_undo = out.undo
 
     // add to undo/redo stack
-    this.undo_stack.push(() => {
+    var undo = () => {    // Undo. First undo the reaction.
       // Undo. First undo the reaction.
       reaction_undo()
       // Get the nodes to delete
@@ -1507,14 +1674,17 @@ export default class Map {
       this.clear_deleted_nodes()
       // Deselect
       this.deselect_nodes()
-    }, () => {
+    }
+
+    var redo = () => {
       // Redo. Clone the nodes and reactions, to redo this action later.
       this._extend_and_draw_metabolite(new_nodes, selected_node_id)
       // Now redo the reaction
       reaction_redo()
-    })
+    }
+    this.undo_stack.push(undo, redo)
 
-    return
+    return Object.assign({}, out, { undo, redo })
   }
 
   /**
@@ -1537,6 +1707,11 @@ export default class Map {
       }
     }
     utils.extend(this.nodes, new_nodes)
+    Object.entries(new_nodes).map(([n_id, node]) => {
+      if (node.bigg_id) {
+        this.bigg_index.insert(node.bigg_id, n_id, node)
+      }
+    })
   }
 
   /**
@@ -1552,6 +1727,9 @@ export default class Map {
         this.search_index.insert('r_name' + r_id, { 'name': reaction.name,
                                                     'data': { type: 'reaction',
                                                               reaction_id: r_id }})
+        if (reaction.bigg_id) {
+          this.bigg_index.insert(reaction.bigg_id, r_id, reaction)
+        }
         for (var g_id in reaction.genes) {
           var gene = reaction.genes[g_id]
           this.search_index.insert('r' + r_id + '_g' + g_id,
@@ -1621,10 +1799,6 @@ export default class Map {
       var node = new_nodes[node_id]
       if (node.node_is_primary && node_id!=selected_node_id) {
         this.select_metabolite_with_id(node_id)
-        var new_coords = { x: node.x, y: node.y }
-        if (this.zoomContainer) {
-          this.zoomContainer.translateOffScreen(new_coords)
-        }
       }
     }
   }
@@ -1721,7 +1895,8 @@ export default class Map {
       this.undo_stack.push(undo_fn, redo_fn)
     }
 
-    return { undo: undo_fn, redo: redo_fn }
+    const id = Object.keys(saved_reactions)[0]
+    return { undo: undo_fn, redo: redo_fn, id, bigg_id: reaction_bigg_id }
   }
 
   cycle_primary_node () {

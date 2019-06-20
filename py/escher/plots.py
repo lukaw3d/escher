@@ -244,10 +244,12 @@ class Builder(widgets.DOMWidget):
         - canvas_size_and_loc
         - reaction_data
         - reaction_styles
+        - reaction_opacity
         - reaction_compare_style
         - reaction_scale
         - reaction_no_data_color
         - reaction_no_data_size
+        - reaction_highlight
         - gene_data
         - and_method_in_gene_reaction_rule
         - metabolite_data
@@ -438,6 +440,10 @@ class Builder(widgets.DOMWidget):
                             Series, pandas DataFrame, dict, list, or None""")
 
     reaction_styles = Any(None, allow_none=True)\
+        .tag(sync=True, option=True)
+    reaction_opacity = Any(None, allow_none=True)\
+        .tag(sync=True, option=True)
+    reaction_highlight = Any(None, allow_none=True)\
         .tag(sync=True, option=True)
     reaction_compare_style = Any(None, allow_none=True)\
         .tag(sync=True, option=True)
