@@ -1445,7 +1445,7 @@ class Builder {
         ignore_with_input: true
       },
       toggle_beziers: {
-        key: 'b',
+        //key: 'b',
         target: map,
         fn: map.toggle_beziers,
         ignoreWithInput: true,
