@@ -895,39 +895,53 @@ class Builder {
    * Removes reactions that are drawn previously but not provided in the list.
    * If any reactions are newly added, it zooms to it.
    *
-   * @param ['bigg_id', 'bigg_id'] added_reactions
+   * @param {['bigg_id', 'bigg_id']} added_reactions
+   * @param {boolean} reuseAllExisting - when adding reactions, reuse all existing metabolites
+   *   (not just newly added ones) and merge with those reactions
    */
-  set_added_reactions (added_reactions) {
+  set_added_reactions (added_reactions, reuseAllExisting=false) {
     this.settings.get('added_reactions').forEach((reaction) => {
       reaction.undo()
     })
 
     let newlyAdded = []
+    let topLeftOffset = 0
     while (true) {
-      const newReaction = this.map.draw_one_added_reaction(
+      const mergedReaction = this.map.draw_one_added_reaction(
         added_reactions,
-        newlyAdded.map(reaction => reaction.bigg_id)
+        newlyAdded.map(reaction => reaction.bigg_id),
+        reuseAllExisting
       )
-      if (newReaction) {
-        newlyAdded.push(newReaction)
-        added_reactions = added_reactions.filter((reaction) => reaction !== newReaction.bigg_id)
+      if (mergedReaction) {
+        newlyAdded.push(mergedReaction)
+        added_reactions = added_reactions.filter((reaction) => reaction !== mergedReaction.bigg_id)
       }
-      if (!newReaction || !added_reactions.length) {
+      if (!added_reactions.length) {
         break
       }
-    }
-    const { x, y } = this.map.canvas.sizeAndLocation()
-    added_reactions.forEach((reaction, i) => {
+      if (mergedReaction) {
+        // Keep trying to reuse
+        continue
+      }
+
+      const { x, y } = this.map.canvas.sizeAndLocation()
+      const reaction = added_reactions[0]
+      added_reactions = added_reactions.slice(1)
       const coordinates = {
         x: x + 250,
-        y: y + 100 + i * 400
+        y: y + 100 + topLeftOffset * 400
       }
       const newReaction = this.map.new_reaction_from_scratch(
         reaction,
         coordinates,
         90)
       newlyAdded.push(newReaction)
-    })
+      topLeftOffset++
+
+      if (!added_reactions.length) {
+        break
+      }
+    }
 
     this.settings.set('added_reactions', newlyAdded)
     // @matyasfodor - not sure if this is required

@@ -589,24 +589,27 @@ export default class Map {
    * Attempts to draw one reaction. First it tries to draw it to the already
    * previously added reactions. If it's not working, then it looks up normal reactions
    * returns the reactionId successfully added or undefined
-   * @param {*} reactionIds
-   * @param {*} previouslyAddedReactionIds
+   * @param {string[]} reactionIds
+   * @param {string[]} previouslyAddedReactionIds
+   * @param {boolean} reuseAllExisting - when adding reactions, reuse all existing metabolites
+   *   (not just newly added ones) and merge with those reactions
    */
-  draw_one_added_reaction (reactionIds, previouslyAddedReactionIds) {
+  draw_one_added_reaction (reactionIds, previouslyAddedReactionIds, reuseAllExisting=false) {
     let added
     const previouslyAddedRactionsMetabolites = previouslyAddedReactionIds
-      .map((reactionIds) => this.cobra_model.reactions[reactionIds])
+      .map((reactionId) => this.cobra_model.reactions[reactionId])
       .reduce((accumulator, reaction) => accumulator.concat(Object.keys(reaction.metabolites)), [])
       .filter((metabolite) => this.isMetabolite.call(this, metabolite))
-      .filter((metabolite) => {
-        const nodes = this.bigg_index.getAll(metabolite)
-        return nodes.some((node) => node.node_is_primary)
-      })
-    // added = reactionIds.find(()
+      // TODO: reenable when primary nodes are detected correctly
+      // .filter((metabolite) => {
+      //   const nodes = this.bigg_index.getAll(metabolite)
+      //   return nodes.some((node) => node.node_is_primary)
+      // })
     added = utils.findMap(reactionIds, (reactionId) => {
       return this.try_drawing_reaction.call(this, reactionId, previouslyAddedRactionsMetabolites)
     })
-    if (!added) {
+
+    if (!added && reuseAllExisting) {
       const allMetabolites = this.bigg_index
         .keys()
         .filter((metabolite) => this.isMetabolite.call(this, metabolite))
