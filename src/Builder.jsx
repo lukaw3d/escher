@@ -943,13 +943,13 @@ class Builder {
   }
 
   knockout_reaction (data) {
-    this.settings.set('reaction_knockout', this.settings.get('reaction_knockout').push(data))
+    this.settings.set('reaction_knockout', [...this.settings.get('reaction_knockout'), data])
     this.map.draw_these_knockouts(this.settings.get('reaction_knockout'))
     this.map.set_status('')
   }
 
   undo_knockout_reaction (data) {
-    this.settings.set('reaction_knockout', this.settings.get('reaction_knockout').remove(data))
+    this.settings.set('reaction_knockout', this.settings.get('reaction_knockout').filter(ko => ko !== data))
     this.map.clear_these_knockouts(this.settings.get('reaction_knockout'))
     this.map.set_status('')
   }
