@@ -1,1 +1,0 @@
-var Canvas = require('../Canvas');
