@@ -174,11 +174,14 @@ export function newReaction (biggId, cobraReaction, cobraMetabolites,
   // set primary metabolites, and keep track of the total counts
   for (let metBiggId in newReaction.metabolites) {
     const metabolite = newReaction.metabolites[metBiggId]
+    const isMetabolite = cofactors.indexOf(utils.decompartmentalize(metabolite.bigg_id)[0]) === -1
     if (metabolite.coefficient < 0) {
-      metabolite.is_primary = metabolite.index === primaryReactantIndex
+      metabolite.is_primary = metabolite.index === primaryReactantIndex ||
+                              (isMetabolite && cobraMetabolites[metabolite.bigg_id].is_heterologous)
       metabolite.count = reactantCount
     } else {
-      metabolite.is_primary = metabolite.index === primaryProductIndex
+      metabolite.is_primary = metabolite.index === primaryProductIndex ||
+                              (isMetabolite && cobraMetabolites[metabolite.bigg_id].is_heterologous)
       metabolite.count = productCount
     }
   }
