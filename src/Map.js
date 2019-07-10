@@ -1636,7 +1636,7 @@ export default class Map {
     const metabolite = this.cobra_model.metabolites[metaboliteId]
     const selected_node_id = String(++this.largest_ids.nodes)
     const label_d = build.getMetLabelLoc(utils.to_radians(direction), 0, 1,
-                                         true, metaboliteId, true)
+                                         true, metaboliteId, 0)
     var selected_node = {
       connected_segments: [],
       x: coords.x,

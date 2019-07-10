@@ -60,7 +60,7 @@ export function getMetLabelLoc (angleRaw, index, count, isPrimary, biggId,
       return { x: -width * 0.3, y: -20 }
     }
   } else {
-    if (isPrimary) {
+    if (index === primaryIndex) {
       // Primary
       return {
         x: 25 - 38 * Math.abs(Math.abs(angle) - Math.PI / 2),
@@ -68,10 +68,10 @@ export function getMetLabelLoc (angleRaw, index, count, isPrimary, biggId,
       }
     } else if ((angle < 0 && leftRight) || (angle > 0 && !leftRight)) {
       // Right
-      return { x: 15, y: 0 }
+      return { x: isPrimary ? 35 : 15, y: 0 }
     } else {
       // Left
-      return { x: -width * 0.5, y: 30 }
+      return { x: -width * 0.5, y: isPrimary ? 50 : 30 }
     }
   }
 }
@@ -531,12 +531,11 @@ function calculateNewMetaboliteCoordinates (met, primaryIndex, mainAxis, center,
   const numSlots = met.count - 1
 
   // Size and spacing for primary and secondary metabolites
-  let ds
+  let ds = met.is_primary ? 20 : 10
   let drawAtIndex
-  if (met.is_primary) { // primary
-    ds = 20
+  if (met.index === primaryIndex) { // primary
+    drawAtIndex = undefined
   } else { // secondary
-    ds = 10
     // don't use center slot
     if (met.index > primaryIndex) drawAtIndex = met.index - 1
     else drawAtIndex = met.index
@@ -553,7 +552,7 @@ function calculateNewMetaboliteCoordinates (met, primaryIndex, mainAxis, center,
   let b2
 
   // Reactants
-  if (((met.coefficient < 0) !== isReversed) && met.is_primary) { // Ali == BADASS
+  if (((met.coefficient < 0) !== isReversed) && met.index === primaryIndex) { // Ali == BADASS
     end = {
       x: reactionAxis[0].x,
       y: reactionAxis[0].y
@@ -588,7 +587,7 @@ function calculateNewMetaboliteCoordinates (met, primaryIndex, mainAxis, center,
       x: mainAxis[0].x + metSecondaryDisp(secondaryW, secondaryDis, drawAtIndex, numSlots),
       y: mainAxis[0].y + metIndexDisp(w, drawAtIndex, numSlots)
     }
-  } else if (((met.coefficient > 0) !== isReversed) && met.is_primary) {        // products
+  } else if (((met.coefficient > 0) !== isReversed) && met.index === primaryIndex) {        // products
     end = {
       x: reactionAxis[1].x,
       y: reactionAxis[1].y
