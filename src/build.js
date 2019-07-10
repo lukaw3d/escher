@@ -145,10 +145,11 @@ export function newReaction (biggId, cobraReaction, cobraMetabolites,
     if (coefficient < 0) {
       newMetabolite.index = reactantCount
       // score the metabolites. Infinity == selected, >= 1 == carbon containing
+      // Note: new_reaction_from_scratch contains a copy of this logic
       const carbons = /C([0-9]+)/.exec(formula)
       if (selectedNode.bigg_id === newMetabolite.bigg_id) {
         reactantRanks.push([ newMetabolite.index, Infinity ])
-      } else if (carbons && cofactors.indexOf(utils.decompartmentalize(newMetabolite.bigg_id)[0]) === -1) {
+      } else if (carbons && utils.isMetabolite(metabolite.bigg_id, cofactors)) {
         reactantRanks.push([ newMetabolite.index, parseInt(carbons[1]) ])
       }
       reactantCount++
@@ -158,7 +159,7 @@ export function newReaction (biggId, cobraReaction, cobraMetabolites,
       if (selectedNode.bigg_id === newMetabolite.bigg_id) {
         productRanks.push([ newMetabolite.index, Infinity ])
         reactionIsReversed = true
-      } else if (carbons && cofactors.indexOf(utils.decompartmentalize(newMetabolite.bigg_id)[0]) === -1) {
+      } else if (carbons && utils.isMetabolite(metabolite.bigg_id, cofactors)) {
         productRanks.push([ newMetabolite.index, parseInt(carbons[1]) ])
       }
       productCount++
@@ -174,8 +175,9 @@ export function newReaction (biggId, cobraReaction, cobraMetabolites,
   // set primary metabolites, and keep track of the total counts
   for (let metBiggId in newReaction.metabolites) {
     const metabolite = newReaction.metabolites[metBiggId]
-    const isMetabolite = cofactors.indexOf(utils.decompartmentalize(metabolite.bigg_id)[0]) === -1
+    const isMetabolite = utils.isMetabolite(metabolite.bigg_id, cofactors)
     if (metabolite.coefficient < 0) {
+      // Note: new_reaction_from_scratch contains a copy of this logic
       metabolite.is_primary = metabolite.index === primaryReactantIndex ||
                               (isMetabolite && cobraMetabolites[metabolite.bigg_id].is_heterologous)
       metabolite.count = reactantCount

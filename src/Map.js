@@ -1625,14 +1625,24 @@ export default class Map {
     }
 
     // create the first node
+    // Note: copied is_primary logic from newReaction
+    const primaryMetabolite = _.max(_.pairs(cobra_reaction.metabolites), ([metaboliteId, coefficient]) => {
+      if (coefficient >= 0) return 0
+      if (!this.isMetabolite(metaboliteId)) return 0
+      const metabolite = this.cobra_model.metabolites[metaboliteId]
+      const carbons = /C([0-9]+)/.exec(metabolite.formula)
+      const is_heterologous = metabolite.is_heterologous ? 1 : 0
+      return carbons ? parseInt(carbons[1]) : is_heterologous
+    })
     const reactant_ids = _.map(cobra_reaction.metabolites,
                                (coeff, met_id) => [ coeff, met_id ])
           .filter(x => x[0] < 0) // coeff < 0
           .map(x => x[1]) // metabolite id
     // get the first reactant or else the first product
-    const metaboliteId = reactant_ids.length > 0
+    const firstMetabolite = reactant_ids.length > 0
           ? reactant_ids[0]
           : Object.keys(cobra_reaction.metabolites)[0]
+    const metaboliteId = primaryMetabolite ? primaryMetabolite[0] : firstMetabolite
     const metabolite = this.cobra_model.metabolites[metaboliteId]
     const selected_node_id = String(++this.largest_ids.nodes)
     const label_d = build.getMetLabelLoc(utils.to_radians(direction), 0, 1,
