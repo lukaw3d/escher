@@ -600,11 +600,10 @@ export default class Map {
       .map((reactionId) => this.cobra_model.reactions[reactionId])
       .reduce((accumulator, reaction) => accumulator.concat(Object.keys(reaction.metabolites)), [])
       .filter((metabolite) => this.isMetabolite.call(this, metabolite))
-      // TODO: reenable when primary nodes are detected correctly
-      // .filter((metabolite) => {
-      //   const nodes = this.bigg_index.getAll(metabolite)
-      //   return nodes.some((node) => node.node_is_primary)
-      // })
+      .filter((metabolite) => {
+        const nodes = this.bigg_index.getAll(metabolite)
+        return nodes.some((node) => node.node_is_primary)
+      })
     added = utils.findMap(reactionIds, (reactionId) => {
       return this.try_drawing_reaction.call(this, reactionId, previouslyAddedRactionsMetabolites)
     })
