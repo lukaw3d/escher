@@ -597,13 +597,11 @@ export default class Map {
   draw_one_added_reaction (reactionIds, previouslyAddedReactionIds, reuseAllExisting=false) {
     let added
     const previouslyAddedRactionsMetabolites = previouslyAddedReactionIds
-      .map((reactionId) => this.cobra_model.reactions[reactionId])
-      .reduce((accumulator, reaction) => accumulator.concat(Object.keys(reaction.metabolites)), [])
-      .filter((metabolite) => this.isMetabolite.call(this, metabolite))
-      .filter((metabolite) => {
-        const nodes = this.bigg_index.getAll(metabolite)
-        return nodes.some((node) => node.node_is_primary)
-      })
+      .map((reactionEscherId) => this.getNodeMetabolites(reactionEscherId))
+      .reduce((accumulator, metaboliteNodes) => accumulator.concat(metaboliteNodes), [])
+      .filter((metaboliteNode) => this.isMetabolite.call(this, metaboliteNode.bigg_id))
+      .filter((metaboliteNode) => metaboliteNode.node_is_primary)
+
     added = utils.findMap(reactionIds, (reactionId) => {
       return this.try_drawing_reaction.call(this, reactionId, previouslyAddedRactionsMetabolites)
     })
@@ -611,11 +609,11 @@ export default class Map {
     if (!added && reuseAllExisting) {
       const allMetabolites = this.bigg_index
         .keys()
-        .filter((metabolite) => this.isMetabolite.call(this, metabolite))
-        .filter((metabolite) => {
-          const nodes = this.bigg_index.getAll(metabolite)
-          return nodes.some((node) => node.node_is_primary)
-        })
+        .map((metabolite) => this.bigg_index.getAll(metabolite))
+        .reduce((accumulator, metaboliteNodes) => accumulator.concat(metaboliteNodes), [])
+        .filter((metaboliteNode) => this.isMetabolite.call(this, metaboliteNode.bigg_id))
+        .filter((metaboliteNode) => metaboliteNode.node_is_primary)
+
       added = utils.findMap(reactionIds, (reactionId) => {
         return this.try_drawing_reaction.call(this, reactionId, allMetabolites)
       })
@@ -629,24 +627,30 @@ export default class Map {
    * @param {*} reactionId
    * @param {*} metabolites
    */
-  try_drawing_reaction (reactionId, metabolites) {
+  try_drawing_reaction (reactionId, nodeMetabolites) {
     const reaction = this.cobra_model.reactions[reactionId]
     const reactionMetabolites = Object.keys(reaction.metabolites)
     reactionMetabolites.sort();
-    const selectedMetabolite = metabolites.find((metabolite) => {
+    const selectedMetabolite = nodeMetabolites.find((nodeMetabolite) => {
       return reactionMetabolites.find((reactionMetabolite) => {
-        return metabolite === reactionMetabolite
+        return nodeMetabolite.bigg_id === reactionMetabolite
       })
     })
     if (!selectedMetabolite) {
       return false
     }
-    const { escherId } = this.bigg_index.getOneWithId(selectedMetabolite)
-    return this.new_reaction_for_metabolite(reaction.bigg_id, escherId, 90)
+    return this.new_reaction_for_metabolite(reaction.bigg_id, selectedMetabolite.node_id, 90)
   }
 
   isMetabolite (metabolite) {
     return utils.isMetabolite(metabolite, this.settings.get('cofactors'))
+  }
+
+  getNodeMetabolites (reactionEscherId) {
+    return [
+      ..._.map(this.reactions[reactionEscherId].segments, s => this.nodes[s.to_node_id]),
+      ..._.map(this.reactions[reactionEscherId].segments, s => this.nodes[s.from_node_id]),
+    ].filter(node => node.node_type === 'metabolite')
   }
 
   update_these_reactions_opacity (reactions_obj) {
