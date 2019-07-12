@@ -909,7 +909,7 @@ class Builder {
     while (true) {
       const mergedReaction = this.map.draw_one_added_reaction(
         added_reactions,
-        newlyAdded.map(reaction => reaction.bigg_id),
+        newlyAdded.map(reaction => reaction.id),
         reuseAllExisting
       )
       if (mergedReaction) {
