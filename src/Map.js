@@ -414,6 +414,12 @@ export default class Map {
     this.draw_all_reactions(true, true); // also draw beziers
     this.draw_all_nodes(true)
     this.draw_all_text_labels()
+
+    this.set_these_highlights(this.settings.get('reaction_highlight'))
+    this.set_these_opacity_reactions(this.settings.get('reaction_opacity'))
+    this.update_these_reactions_opacity(this.settings.get('reaction_fva_data'))
+    this.draw_these_knockouts(this.settings.get('reaction_knockout'))
+    this.draw_gene_knockouts(this.settings.get('gene_knockout'))
   }
 
   /** Draw all reactions, and clear deleted reactions.
